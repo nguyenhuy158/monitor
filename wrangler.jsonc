@@ -13,10 +13,6 @@
   },
   "vars": {
     "SSO_ISSUER": "https://auth.huyab.click",
-    "ODOO_URL": "",
-    "ODOO_DB": "",
-    "ODOO_USER": "",
-    "ODOO_PASSWORD": "",
     "ALERT_EMAIL": "ntqhuy2k2@gmail.com"
   },
   "d1_databases": [
