@@ -23,5 +23,8 @@
     }
   ],
   "services": [{ "binding": "MAILER", "service": "mailer" }],
+  "observability": {
+    "enabled": true
+  },
   "routes": [{ "pattern": "alert.huyab.click", "custom_domain": true }]
 }
