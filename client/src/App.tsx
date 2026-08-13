@@ -1,7 +1,16 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Search, X, MoreVertical, LogOut, PackageOpen, LayoutDashboard, Settings, BellRing, BarChart3, Activity, Server, Clock, ChevronUp, ChevronDown, ListTree } from 'lucide-react'
-import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast, Pagination, Menu, Avatar, Skeleton, EmptyState, cn, Combobox, BottomNav, Switch } from '@ui'
+import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, Pagination, Menu, Avatar, Skeleton, EmptyState, cn, Combobox, BottomNav, Switch } from '@ui'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { toast } from 'sonner'
+import { format, formatDistanceToNowStrict } from 'date-fns'
+import { vi } from 'date-fns/locale'
+import { createAvatar } from '@dicebear/core'
+import { funEmoji } from '@dicebear/collection'
+
+function userAvatarSrc(email) {
+  return createAvatar(funEmoji, { seed: email, size: 64 }).toDataUri()
+}
 
 const ENV_OPTIONS = [
   { value: 'dev', label: 'Dev' },
@@ -11,30 +20,19 @@ const ENV_OPTIONS = [
 
 const ENV_TONE = { dev: 'neutral', preprod: 'warning', prod: 'danger' }
 
-function pad(n) {
-  return String(n).padStart(2, '0')
-}
-
 // Odoo tra ve gio UTC khong co suffix 'Z', can tu them vao truoc khi parse.
 function formatDateTime(value) {
-  const d = new Date(value + 'Z')
-  const time = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
-  const date = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)}`
-  return `${time} ${date}`
+  return format(new Date(value + 'Z'), 'HH:mm:ss dd/MM/yy')
 }
 
 function getDelayText(nextCall) {
-  const diffMs = new Date() - new Date(nextCall + 'Z')
-  if (diffMs <= 0) return null
-  
-  const diffMins = Math.floor(diffMs / 60000)
-  if (diffMins < 1) return 'vừa xong'
-  if (diffMins < 60) return `trễ ${diffMins}m`
-  
-  const diffHours = Math.floor(diffMins / 60)
-  if (diffHours < 24) return `trễ ${diffHours}h`
-  
-  return `trễ ${Math.floor(diffHours / 24)}d`
+  const target = new Date(nextCall + 'Z')
+  if (target >= new Date()) return null
+
+  const diffMs = new Date() - target
+  if (diffMs < 60000) return 'vừa xong'
+
+  return `trễ ${formatDistanceToNowStrict(target, { locale: vi })}`
 }
 
 function Logo() {
@@ -64,7 +62,6 @@ updateDocumentTitle()
 setInterval(updateDocumentTitle, 10000)
 
 export default function App() {
-  const toast = useToast()
   const [configs, setConfigs] = useState([])
   const [loadingConfigs, setLoadingConfigs] = useState(true)
   const [selectedConfigId, setSelectedConfigId] = useState('')
@@ -590,7 +587,7 @@ export default function App() {
                 align="right"
                 trigger={({ onClick }) => (
                   <button onClick={onClick} className="flex items-center">
-                    <Avatar src={`https://www.gravatar.com/avatar/${btoa(user.email)}?d=mp`} alt={user.email} size="sm" />
+                    <Avatar src={userAvatarSrc(user.email)} name={user.email} size="sm" />
                   </button>
                 )}
                 items={[
@@ -1033,7 +1030,7 @@ export default function App() {
               <div className="rounded-ui bg-surface-muted p-4 border border-border space-y-3">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-fg-muted">Thông tin tài khoản</h4>
                 <div className="flex items-center gap-3">
-                  <Avatar src={`https://www.gravatar.com/avatar/${btoa(user.email)}?d=mp`} size="sm" />
+                  <Avatar src={userAvatarSrc(user.email)} name={user.email} size="sm" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{user.email}</p>
                     <p className="text-[11px] text-fg-muted">Tài khoản SSO huyab auth</p>
