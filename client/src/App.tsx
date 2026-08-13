@@ -326,7 +326,6 @@ export default function App() {
               <Logo />
             </div>
             <div className="space-y-2">
-              <h1 className="text-3xl font-extrabold tracking-tight text-fg">Odoo Monitor</h1>
               <p className="text-sm text-fg-muted max-w-[280px] mx-auto leading-relaxed">
                 Giải pháp giám sát Cron Job Odoo thông minh. Nhận cảnh báo tức thì qua email khi hệ thống gặp sự cố.
               </p>
