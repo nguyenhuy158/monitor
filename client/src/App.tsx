@@ -52,48 +52,18 @@ function Logo() {
   )
 }
 
+// Cập nhật title là giờ hiện tại
+const updateDocumentTitle = () => {
+  const now = new Date()
+  const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+  document.title = timeStr
+}
+
+// Chạy ngay khi script load
+updateDocumentTitle()
+setInterval(updateDocumentTitle, 10000)
+
 export default function App() {
-  const toast = useToast()
-  const [configs, setConfigs] = useState([])
-  const [loadingConfigs, setLoadingConfigs] = useState(true)
-  const [selectedConfigId, setSelectedConfigId] = useState('')
-  const [crons, setCrons] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add')
-  const [newConfig, setNewConfig] = useState({ name: '', url: '', db: '', username: '', password: '', env: 'prod' })
-  const [user, setUser] = useState(null)
-  const [loadingUser, setLoadingUser] = useState(true)
-  const [isSendingEmail, setIsSendingEmail] = useState(false)
-  const [viewingCron, setViewingCron] = useState(null)
-  
-  const [userSettings, setUserSettings] = useState({ alert_delay_minutes: 30 })
-  const [isUpdatingSettings, setIsUpdatingSettings] = useState(false)
-  
-  const [activeTab, setActiveTab] = useState<'stats' | 'dashboard' | 'configs' | 'settings'>('stats')
-  const [allCronsData, setAllCronsData] = useState<Record<string, any[]>>({})
-  const [loadingAllCrons, setLoadingAllCrons] = useState(false)
-  
-  const [currentPage, setCurrentPage] = useState(1)
-  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' | null }>({ key: 'nextcall', direction: 'asc' })
-  const [searchQuery, setSearchQuery] = useState('')
-  const [filterMode, setFilterMode] = useState<'all' | 'delayed' | 'prod' | 'preprod' | 'dev'>('all')
-  const [isSearchVisible, setIsSearchVisible] = useState(false)
-  const [isFilterModalOpen, setIsFilterModeOpen] = useState(false)
-  const PAGE_LIMIT = 5
-
-  // Cập nhật title là giờ hiện tại
-  useEffect(() => {
-    const updateTitle = () => {
-      const now = new Date()
-      const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`
-      document.title = timeStr
-    }
-
-    updateTitle()
-    const interval = setInterval(updateTitle, 10000) // Cập nhật mỗi 10s để chính xác phút
-    return () => clearInterval(interval)
-  }, [])
 
   useEffect(() => {
     fetch('/api/me')
