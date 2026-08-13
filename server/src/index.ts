@@ -5,7 +5,7 @@ import { getCrons } from "./odoo";
 
 export interface Env {
   SSO_ISSUER: string;
-  MAILER_KEY?: string;
+  MAILER_KEY: string;
   MAILER: { fetch: (req: Request) => Promise<Response> };
   ASSETS: { fetch: (req: Request) => Promise<Response> };
   DB: D1Database;
