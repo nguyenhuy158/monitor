@@ -13,7 +13,8 @@
   },
   "vars": {
     "SSO_ISSUER": "https://auth.huyab.click",
-    "ALERT_EMAIL": "ntqhuy2k2@gmail.com"
+    "ALERT_EMAIL": "ntqhuy2k2@gmail.com",
+    "MAILER_KEY": ""
   },
   "d1_databases": [
     {
