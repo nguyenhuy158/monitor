@@ -52,13 +52,62 @@ app.get("/api/configs", async (c) => {
   return c.json(results);
 });
 
+const ENVS = ["dev", "preprod", "prod"];
+
 app.post("/api/configs", async (c) => {
   const email = await getAuthUser(c);
   if (!email) return c.json({ error: "Unauthorized" }, 401);
   const body = await c.req.json();
+  const env = ENVS.includes(body.env) ? body.env : "prod";
   await c.env.DB.prepare(
-    "INSERT INTO monitor_configs (user_email, name, url, db, username, password) VALUES (?, ?, ?, ?, ?, ?)"
-  ).bind(email, body.name, body.url, body.db, body.username, body.password).run();
+    "INSERT INTO monitor_configs (user_email, name, url, db, username, password, env) VALUES (?, ?, ?, ?, ?, ?, ?)"
+  ).bind(email, body.name, body.url, body.db, body.username, body.password, env).run();
+  return c.json({ success: true });
+});
+
+app.post("/api/configs/:id/duplicate", async (c) => {
+  const email = await getAuthUser(c);
+  if (!email) return c.json({ error: "Unauthorized" }, 401);
+  const id = c.req.param("id");
+  const original: any = await c.env.DB.prepare(
+    "SELECT * FROM monitor_configs WHERE id = ? AND user_email = ?"
+  ).bind(id, email).first();
+  if (!original) return c.json({ error: "Not found" }, 404);
+
+  await c.env.DB.prepare(
+    "INSERT INTO monitor_configs (user_email, name, url, db, username, password, env, alert_enabled) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+  ).bind(
+    email,
+    `${original.name} (copy)`,
+    original.url,
+    original.db,
+    original.username,
+    original.password,
+    original.env,
+    original.alert_enabled,
+  ).run();
+  return c.json({ success: true });
+});
+
+app.post("/api/configs/:id/test-email", async (c) => {
+  const email = await getAuthUser(c);
+  if (!email) return c.json({ error: "Unauthorized" }, 401);
+  const id = c.req.param("id");
+  const config: any = await c.env.DB.prepare(
+    "SELECT * FROM monitor_configs WHERE id = ? AND user_email = ?"
+  ).bind(id, email).first();
+  if (!config) return c.json({ error: "Not found" }, 404);
+
+  const res = await c.env.MAILER.fetch(new Request("https://mailer/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      to: email,
+      subject: `[Odoo Monitor] Test email - ${config.name}`,
+      text: `Đây là email test cho instance "${config.name}" (${config.env}). Nếu bạn nhận được email này, cấu hình gửi mail đang hoạt động bình thường.`,
+    }),
+  }));
+  if (!res.ok) return c.json({ error: "Mailer failed" }, 502);
   return c.json({ success: true });
 });
 
