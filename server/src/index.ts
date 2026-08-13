@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
-import { getCrons, CronItem } from "./odoo";
+import { getCrons } from "./odoo";
 
 export interface Env {
   SSO_ISSUER: string;
@@ -9,30 +9,16 @@ export interface Env {
   ODOO_USER: string;
   ODOO_PASSWORD: string;
   ALERT_EMAIL: string;
-  MAILER: {
-    fetch: (request: Request) => Promise<Response>;
-  };
+  MAILER: { fetch: (req: Request) => Promise<Response> };
+  ASSETS: { fetch: (req: Request) => Promise<Response> };
 }
 
 const app = new Hono<{ Bindings: Env }>();
 
-// Middleware check SSO
-app.use("*", async (c, next) => {
-  if (c.req.path === "/health") return await next();
-  
-  const session = getCookie(c, "session");
-  if (!session) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-  
-  // In a real scenario, we should verify the JWT here using public keys from SSO_ISSUER
-  // For now, let's assume if the cookie exists it's a start, 
-  // but better to implement verifySession logic.
-  
-  await next();
-});
-
 app.get("/api/crons", async (c) => {
+  const session = getCookie(c, "session");
+  if (!session) return c.json({ error: "Unauthorized" }, 401);
+
   try {
     const crons = await getCrons(
       c.env.ODOO_URL,
@@ -46,7 +32,8 @@ app.get("/api/crons", async (c) => {
   }
 });
 
-app.get("/health", (c) => c.text("OK"));
+// Phục vụ frontend cho mọi route khác không phải /api
+app.get("*", (c) => c.env.ASSETS.fetch(c.req.raw));
 
 export default {
   fetch: app.fetch,
@@ -59,21 +46,18 @@ export default {
     );
 
     const now = new Date();
-    const delayedCrons = crons.filter((cron) => {
-      const nextCall = new Date(cron.nextcall + "Z"); // Odoo usually returns UTC without suffix
-      return nextCall < now;
-    });
+    const delayedCrons = crons.filter((cron) => new Date(cron.nextcall + "Z") < now);
 
     if (delayedCrons.length > 0) {
-      const body = `Cảnh báo: Có ${delayedCrons.length} cron bị trễ:\n\n` + 
-        delayedCrons.map(c => `- ${c.name} (Dự kiến: ${c.nextcall})`).join("\n");
+      const body = `Có ${delayedCrons.length} cron bị trễ:\n` + 
+        delayedCrons.map(c => `- ${c.name} (${c.nextcall})`).join("\n");
 
       await env.MAILER.fetch(new Request("https://mailer/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: env.ALERT_EMAIL,
-          subject: `[Odoo Monitor] Cảnh báo Cron chậm trễ`,
+          subject: `[Odoo Monitor] Cảnh báo Cron`,
           text: body
         })
       }));

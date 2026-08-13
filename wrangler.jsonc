@@ -1,15 +1,12 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "monitor",
-  "main": "src/worker/index.ts",
+  "main": "server/src/index.ts",
   "compatibility_date": "2025-01-01",
   "compatibility_flags": ["nodejs_compat"],
-  "observability": {
-    "enabled": true
-  },
   "assets": {
-    "directory": "./src/web/dist",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
+    "directory": "./dist"
   },
   "vars": {
     "SSO_ISSUER": "https://auth.huyab.click",
@@ -19,12 +16,9 @@
     "ODOO_PASSWORD": "",
     "ALERT_EMAIL": "ntqhuy2k2@gmail.com"
   },
-  "workers_dev": false,
-  "routes": [{ "pattern": "moni.huyab.click", "custom_domain": true }],
-  "services": [
-    {
-      "binding": "MAILER",
-      "service": "mailer"
-    }
-  ]
+  "services": [{ "binding": "MAILER", "service": "mailer" }],
+  "triggers": {
+    "crons": ["*/10 * * * *"]
+  },
+  "routes": [{ "pattern": "moni.huyab.click", "custom_domain": true }]
 }
