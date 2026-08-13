@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
-import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react'
+import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Search, X } from 'lucide-react'
 import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast, Pagination } from '@ui'
 
 const ENV_OPTIONS = [
@@ -36,6 +36,8 @@ export default function App() {
   
   const [currentPage, setCurrentPage] = useState(1)
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' | null }>({ key: 'nextcall', direction: 'asc' })
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isSearchVisible, setIsSearchVisible] = useState(false)
   const PAGE_LIMIT = 5
 
   useEffect(() => {
@@ -155,12 +157,26 @@ export default function App() {
       .finally(() => setIsSendingEmail(false))
   }
 
+  const toggleSearch = () => {
+    setIsSearchVisible(!isSearchVisible)
+    if (isSearchVisible) setSearchQuery('')
+    setCurrentPage(1)
+  }
+
   const selectedConfig = (configs || []).find(c => String(c.id) === String(selectedConfigId))
   const now = new Date()
 
   const sortedCrons = useMemo(() => {
     if (!Array.isArray(crons)) return []
-    const items = [...crons]
+    let items = [...crons]
+    
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      items = items.filter(item => 
+        (item.name || '').toLowerCase().includes(query)
+      )
+    }
+
     if (sortConfig.key && sortConfig.direction) {
       items.sort((a, b) => {
         let aValue = a[sortConfig.key]
@@ -314,7 +330,35 @@ export default function App() {
         </div>
 
         <Card>
-          <CardHeader title="Cron Jobs" className="mb-4" />
+          <div className="flex items-center justify-between mb-4">
+            {!isSearchVisible ? (
+              <>
+                <CardHeader title="Cron Jobs" className="mb-0" />
+                <Button variant="ghost" size="icon" onClick={toggleSearch}>
+                  <Search className="size-4" />
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-center gap-2 w-full animate-in fade-in slide-in-from-right-2 duration-200">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-fg-muted" />
+                  <Input 
+                    autoFocus
+                    placeholder="Search crons..." 
+                    className="pl-9 h-9"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value)
+                      setCurrentPage(1)
+                    }}
+                  />
+                </div>
+                <Button variant="ghost" size="icon" onClick={toggleSearch}>
+                  <X className="size-4" />
+                </Button>
+              </div>
+            )}
+          </div>
           {loading ? (
             <div className="p-6 text-center text-fg-muted">Loading...</div>
           ) : (
