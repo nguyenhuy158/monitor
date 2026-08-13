@@ -77,7 +77,9 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState(1)
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' | null }>({ key: 'nextcall', direction: 'asc' })
   const [searchQuery, setSearchQuery] = useState('')
+  const [filterMode, setFilterMode] = useState<'all' | 'delayed' | 'prod' | 'preprod' | 'dev'>('all')
   const [isSearchVisible, setIsSearchVisible] = useState(false)
+  const [isFilterModalOpen, setIsFilterModeOpen] = useState(false)
   const PAGE_LIMIT = 5
 
   // Cập nhật title là giờ hiện tại
@@ -200,42 +202,47 @@ export default function App() {
   const statsData = useMemo(() => {
     const now = new Date()
     const envStats = {
-      prod: { delayed: 0, total: 0 },
-      preprod: { delayed: 0, total: 0 },
-      dev: { delayed: 0, total: 0 }
+      prod: { delayed: 0, total: 0, crons: [] as any[] },
+      preprod: { delayed: 0, total: 0, crons: [] as any[] },
+      dev: { delayed: 0, total: 0, crons: [] as any[] }
     }
 
     let globalTotal = 0
     let globalDelayed = 0
+    let allDelayedCrons: any[] = []
 
     configs.forEach(config => {
       const crons = allCronsData[config.id] || []
       const env = (config.env || 'prod') as keyof typeof envStats
       
-      const delayedCount = crons.filter(c => new Date(c.nextcall + 'Z') < now).length
+      const cronsWithInstance = crons.map(c => ({ ...c, instanceName: config.name, env: config.env }))
+      const delayedOnes = cronsWithInstance.filter(c => new Date(c.nextcall + 'Z') < now)
       
       if (envStats[env]) {
-        envStats[env].delayed += delayedCount
+        envStats[env].delayed += delayedOnes.length
         envStats[env].total += crons.length
+        envStats[env].crons.push(...delayedOnes)
       }
 
       globalTotal += crons.length
-      globalDelayed += delayedCount
+      globalDelayed += delayedOnes.length
+      allDelayedCrons.push(...delayedOnes)
     })
 
     const healthScore = globalTotal > 0 ? Math.round(((globalTotal - globalDelayed) / globalTotal) * 100) : 100
 
     return {
       envs: [
-        { name: 'Production', delayed: envStats.prod.delayed, total: envStats.prod.total, color: 'var(--ui-danger)' },
-        { name: 'Preprod', delayed: envStats.preprod.delayed, total: envStats.preprod.total, color: 'var(--ui-warning)' },
-        { name: 'Dev', delayed: envStats.dev.delayed, total: envStats.dev.total, color: 'var(--ui-fg-muted)' }
+        { id: 'prod', name: 'Production', delayed: envStats.prod.delayed, total: envStats.prod.total, color: 'var(--ui-danger)', crons: envStats.prod.crons },
+        { id: 'preprod', name: 'Preprod', delayed: envStats.preprod.delayed, total: envStats.preprod.total, color: 'var(--ui-warning)', crons: envStats.preprod.crons },
+        { id: 'dev', name: 'Dev', delayed: envStats.dev.delayed, total: envStats.dev.total, color: 'var(--ui-fg-muted)', crons: envStats.dev.crons }
       ],
       global: {
         totalInstances: configs.length,
         totalCrons: globalTotal,
         totalDelayed: globalDelayed,
-        healthScore
+        healthScore,
+        delayedCrons: allDelayedCrons
       }
     }
   }, [configs, allCronsData])
@@ -366,15 +373,19 @@ export default function App() {
 
   const pageCount = Math.ceil(sortedCrons.length / PAGE_LIMIT)
 
-  const instanceOptions = useMemo(() => {
-    return (configs || []).map(c => ({
-      value: String(c.id),
-      label: c.name,
-      description: c.url.replace(/^https?:\/\//, '')
-    }))
-  }, [configs])
+  const filteredStatsCrons = useMemo(() => {
+    if (filterMode === 'delayed') return statsData.global.delayedCrons
+    const env = statsData.envs.find(e => e.id === filterMode)
+    return env ? env.crons : []
+  }, [filterMode, statsData])
 
-  const delayed = Array.isArray(crons) ? crons.filter(c => new Date(c.nextcall + 'Z') < now) : []
+  const [statsPage, setStatsPage] = useState(1)
+  const paginatedStatsCrons = useMemo(() => {
+    const start = (statsPage - 1) * 5
+    return filteredStatsCrons.slice(start, start + 5)
+  }, [filteredStatsCrons, statsPage])
+
+  useEffect(() => { setStatsPage(1) }, [filterMode])
 
   if (loadingUser) {
     return (
@@ -753,13 +764,16 @@ export default function App() {
                 <p className="text-2xl font-black text-fg">{loadingAllCrons ? "..." : statsData.global.totalCrons}</p>
               </Card>
 
-              <Card className="flex flex-col items-start p-4 bg-danger/5 border-danger/10">
+              <button 
+                onClick={() => { setFilterMode('delayed'); setIsFilterModeOpen(true); }}
+                className="flex flex-col items-start p-4 bg-danger/5 border border-danger/10 rounded-ui text-left transition hover:bg-danger/10"
+              >
                 <div className="size-8 rounded-lg bg-danger/10 flex items-center justify-center mb-3">
                   <Clock className="size-4 text-danger" />
                 </div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-fg-muted">Tổng Trễ</p>
                 <p className="text-2xl font-black text-danger">{loadingAllCrons ? "..." : statsData.global.totalDelayed}</p>
-              </Card>
+              </button>
 
               <Card className="flex flex-col items-start p-4 bg-warning/5 border-warning/10">
                 <div className="size-8 rounded-lg bg-warning/10 flex items-center justify-center mb-3">
@@ -772,13 +786,17 @@ export default function App() {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {statsData.envs.map(stat => (
-                <Card key={stat.name} className="flex flex-col items-center justify-center py-6">
+                <button 
+                  key={stat.name} 
+                  onClick={() => { setFilterMode(stat.id as any); setIsFilterModeOpen(true); }}
+                  className="flex flex-col items-center justify-center py-6 bg-surface border border-border rounded-ui transition hover:bg-surface-muted"
+                >
                   <p className="text-xs font-bold uppercase tracking-widest text-fg-muted mb-1">{stat.name}</p>
                   <p className={cn("text-3xl font-black", stat.delayed > 0 ? "text-danger" : "text-success")}>
                     {loadingAllCrons ? "..." : stat.delayed}
                   </p>
                   <p className="text-[10px] text-fg-muted mt-1 italic">trễ / {loadingAllCrons ? "..." : stat.total} tổng</p>
-                </Card>
+                </button>
               ))}
             </div>
 
@@ -971,6 +989,58 @@ export default function App() {
           </Card>
         )}
       </main>
+
+      <Modal
+        open={isFilterModalOpen}
+        onClose={() => setIsFilterModeOpen(false)}
+        title={
+          filterMode === 'delayed' ? "Tất cả Cron đang trễ" : 
+          filterMode === 'prod' ? "Cron trễ trên Production" :
+          filterMode === 'preprod' ? "Cron trễ trên Preprod" :
+          "Cron trễ trên Dev"
+        }
+        footer={<Button onClick={() => setIsFilterModeOpen(false)}>Đóng</Button>}
+      >
+        <div className="space-y-4">
+          <Table
+            rows={paginatedStatsCrons}
+            rowKey={(row) => `${row.instanceName}-${row.id ?? row.name}`}
+            wrap
+            empty={<div className="p-12 text-center text-fg-muted">Không có cron nào</div>}
+            columns={[
+              { 
+                key: 'name', 
+                header: 'Tên Cron', 
+                cell: (row) => (
+                  <div className="flex flex-col py-1">
+                    <span className="font-medium text-xs opacity-60 uppercase tracking-tighter">{row.instanceName}</span>
+                    <span className="font-bold text-sm break-words">{row.name}</span>
+                  </div>
+                )
+              },
+              { 
+                key: 'delay', 
+                header: 'Đã trễ', 
+                cell: (row) => {
+                  const delay = getDelayText(row.nextcall)
+                  return (
+                    <span className="text-xs font-black text-danger bg-danger/10 px-1.5 py-0.5 rounded-sm uppercase">
+                      {delay}
+                    </span>
+                  )
+                }
+              }
+            ]}
+          />
+          {filteredStatsCrons.length > 5 && (
+            <Pagination 
+              page={statsPage} 
+              pageCount={Math.ceil(filteredStatsCrons.length / 5)} 
+              onChange={setStatsPage} 
+            />
+          )}
+        </div>
+      </Modal>
 
       <BottomNav
         active={activeTab}
