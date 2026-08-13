@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
-import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Search, X, MoreVertical, LogOut, PackageOpen } from 'lucide-react'
-import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast, Pagination, Menu, Avatar, Skeleton, EmptyState, cn, Combobox } from '@ui'
+import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Search, X, MoreVertical, LogOut, PackageOpen, LayoutDashboard, Settings } from 'lucide-react'
+import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast, Pagination, Menu, Avatar, Skeleton, EmptyState, cn, Combobox, BottomNav } from '@ui'
 
 const ENV_OPTIONS = [
   { value: 'dev', label: 'Dev' },
@@ -24,7 +24,7 @@ function formatDateTime(value) {
 
 function Logo() {
   return (
-    <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+    <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-fg shadow-sm shadow-primary/20">
       <svg viewBox="0 0 64 64" className="size-6 fill-current">
         <rect x="16" y="49" width="32" height="8" rx="4" />
         <rect x="27" y="43" width="10" height="7" />
@@ -51,6 +51,8 @@ export default function App() {
   const [loadingUser, setLoadingUser] = useState(true)
   const [isSendingEmail, setIsSendingEmail] = useState(false)
   const [viewingCron, setViewingCron] = useState(null)
+  
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'settings'>('dashboard')
   
   const [currentPage, setCurrentPage] = useState(1)
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' | null }>({ key: 'nextcall', direction: 'asc' })
@@ -300,10 +302,29 @@ export default function App() {
   return (
     <div className="min-h-screen bg-bg">
       <HeaderBar 
-        title="Odoo Monitor" 
+        title="" 
         leading={<Logo />}
         actions={
           <div className="flex items-center gap-2">
+            <nav className="hidden lg:flex items-center gap-1 mr-4 border-r border-border pr-4">
+              <Button 
+                variant={activeTab === 'dashboard' ? 'primary' : 'ghost'} 
+                size="sm" 
+                onClick={() => setActiveTab('dashboard')}
+                leftIcon={<LayoutDashboard size={16} />}
+              >
+                Dashboard
+              </Button>
+              <Button 
+                variant={activeTab === 'settings' ? 'primary' : 'ghost'} 
+                size="sm" 
+                onClick={() => setActiveTab('settings')}
+                leftIcon={<Settings size={16} />}
+              >
+                Settings
+              </Button>
+            </nav>
+            
             <Button 
               variant="outline"
               size="icon" 
@@ -340,208 +361,230 @@ export default function App() {
         }
       />
       
-      <main className="mx-auto max-w-3xl p-4 space-y-6 sm:p-6">
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="flex-1">
-              {loadingConfigs ? (
-                <Skeleton className="h-10 w-full" />
-              ) : (
-                <Combobox
-                  value={selectedConfigId}
-                  onChange={setSelectedConfigId}
-                  options={instanceOptions}
-                  placeholder="Chọn instance Odoo..."
-                  className="w-full"
-                />
-              )}
-            </div>
-            {selectedConfig && (
-              <div className="flex items-center gap-1.5">
-                <Badge tone={ENV_TONE[selectedConfig.env] || 'neutral'} className="h-8">
-                  {selectedConfig.env}
-                </Badge>
-                
-                <div className="h-8 w-px bg-border mx-1" />
+      <main className="mx-auto max-w-3xl p-4 pb-24 space-y-6 sm:p-6 lg:pb-6">
+        {activeTab === 'dashboard' ? (
+          <>
+            <section className="space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  {loadingConfigs ? (
+                    <Skeleton className="h-10 w-full" />
+                  ) : (
+                    <Combobox
+                      value={selectedConfigId}
+                      onChange={setSelectedConfigId}
+                      options={instanceOptions}
+                      placeholder="Chọn instance Odoo..."
+                      className="w-full"
+                    />
+                  )}
+                </div>
+                {selectedConfig && (
+                  <div className="flex items-center gap-1.5">
+                    <Badge tone={ENV_TONE[selectedConfig.env] || 'neutral'} className="h-8">
+                      {selectedConfig.env}
+                    </Badge>
+                    
+                    <div className="h-8 w-px bg-border mx-1" />
 
-                <Button
-                  variant="outline"
-                  size="icon"
-                  aria-label="Reload data"
-                  loading={loading}
-                  onClick={() => fetchCrons(selectedConfigId)}
-                  className="size-8"
-                >
-                  <RefreshCw className="size-3.5" />
-                </Button>
-                
-                <Menu
-                  align="right"
-                  trigger={({ onClick, 'aria-expanded': expanded }) => (
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={onClick}
-                      aria-expanded={expanded}
-                      aria-label="More actions"
+                      aria-label="Reload data"
+                      loading={loading}
+                      onClick={() => fetchCrons(selectedConfigId)}
                       className="size-8"
                     >
-                      <MoreVertical className="size-3.5" />
+                      <RefreshCw className="size-3.5" />
                     </Button>
-                  )}
-                  items={[
-                    {
-                      label: 'Gửi email test',
-                      icon: <Mail className="size-4" />,
-                      onSelect: handleTestEmail,
-                      disabled: isSendingEmail
-                    },
-                    {
-                      label: 'Nhân bản',
-                      icon: <Copy className="size-4" />,
-                      onSelect: handleDuplicateConfig
-                    },
-                    {
-                      label: 'Chỉnh sửa',
-                      icon: <Edit2 className="size-4" />,
-                      onSelect: openEditModal
-                    }
-                  ]}
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Metric 
-              label="Active Crons" 
-              value={loading ? <Skeleton className="h-6 w-12" /> : (Array.isArray(crons) ? crons.length : 0)} 
-            />
-            <Metric
-              label="Delayed"
-              value={
-                loading ? (
-                  <Skeleton className="h-6 w-12" />
-                ) : (
-                  <span className={delayed.length > 0 ? "text-danger" : "text-success"}>
-                    {delayed.length}
-                  </span>
-                )
-              }
-            />
-          </div>
-        </section>
-
-        <Card padded={false} className="overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface-muted/50">
-            {!isSearchVisible ? (
-              <>
-                <h3 className="text-sm font-semibold text-fg">Cron Jobs</h3>
-                <Button variant="ghost" size="icon" onClick={toggleSearch} className="size-8">
-                  <Search className="size-4 text-fg-muted" />
-                </Button>
-              </>
-            ) : (
-              <div className="flex items-center gap-2 w-full animate-in fade-in slide-in-from-right-2 duration-200">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-fg-muted" />
-                  <Input 
-                    autoFocus
-                    placeholder="Tìm kiếm cron..." 
-                    className="pl-9 h-8 text-sm"
-                    value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value)
-                      setCurrentPage(1)
-                    }}
-                  />
-                </div>
-                <Button variant="ghost" size="icon" onClick={toggleSearch} className="size-8">
-                  <X className="size-4 text-fg-muted" />
-                </Button>
-              </div>
-            )}
-          </div>
-          
-          <div className="min-h-[300px]">
-            {loading ? (
-              <div className="divide-y divide-border px-4">
-                {[...Array(PAGE_LIMIT)].map((_, i) => (
-                  <div key={i} className="flex items-center gap-3 py-4">
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-1/2" />
-                      <Skeleton className="h-3 w-1/4" />
-                    </div>
-                    <Skeleton className="h-4 w-20" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col">
-                <Table
-                  className="border-0 rounded-none shadow-none"
-                  rows={paginatedCrons}
-                  rowKey={(row) => row.id ?? row.name}
-                  wrap
-                  onRowClick={(row) => setViewingCron(row)}
-                  empty={
-                    <EmptyState 
-                      title="Không có cron nào" 
-                      description="Có vẻ như instance này không có cron job nào đang chạy."
-                      icon={<PackageOpen className="size-8 opacity-20" />}
-                      className="border-0 rounded-none py-20"
-                    />
-                  }
-                  columns={[
-                    { 
-                      key: 'name', 
-                      header: <SortHeader label="Tên Cron" sortKey="name" />, 
-                      cell: (row) => (
-                        <div className="font-medium break-words py-1">
-                          {row.name}
-                        </div>
-                      )
-                    },
-                    { 
-                      key: 'nextcall', 
-                      header: <SortHeader label="Lần chạy tới" sortKey="nextcall" />, 
-                      cell: (row) => {
-                        const isLate = new Date(row.nextcall + 'Z') < now
-                        return (
-                          <div className="flex flex-col py-1">
-                            <span className={cn("text-sm whitespace-nowrap", isLate && "text-danger font-medium")}>
-                              {formatDateTime(row.nextcall).split(' ')[0]}
-                            </span>
-                            <span className="text-[10px] text-fg-muted whitespace-nowrap">
-                              {formatDateTime(row.nextcall).split(' ')[1]}
-                            </span>
-                          </div>
-                        )
-                      }
-                    },
-                    { 
-                      key: 'active', 
-                      header: <SortHeader label="Trạng thái" sortKey="active" />, 
-                      hideOnMobile: true, 
-                      cell: (row) => row.active ? <Badge tone="success">Active</Badge> : <Badge /> 
-                    }
-                  ]}
-                />
-                
-                {pageCount > 1 && (
-                  <div className="px-4 py-3 border-t border-border bg-surface-muted/30">
-                    <Pagination 
-                      page={currentPage} 
-                      pageCount={pageCount} 
-                      onChange={setCurrentPage} 
+                    
+                    <Menu
+                      align="right"
+                      trigger={({ onClick, 'aria-expanded': expanded }) => (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={onClick}
+                          aria-expanded={expanded}
+                          aria-label="More actions"
+                          className="size-8"
+                        >
+                          <MoreVertical className="size-3.5" />
+                        </Button>
+                      )}
+                      items={[
+                        {
+                          label: 'Gửi email test',
+                          icon: <Mail className="size-4" />,
+                          onSelect: handleTestEmail,
+                          disabled: isSendingEmail
+                        },
+                        {
+                          label: 'Nhân bản',
+                          icon: <Copy className="size-4" />,
+                          onSelect: handleDuplicateConfig
+                        },
+                        {
+                          label: 'Chỉnh sửa',
+                          icon: <Edit2 className="size-4" />,
+                          onSelect: openEditModal
+                        }
+                      ]}
                     />
                   </div>
                 )}
               </div>
-            )}
-          </div>
-        </Card>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Metric 
+                  label="Active Crons" 
+                  value={loading ? <Skeleton className="h-6 w-12" /> : (Array.isArray(crons) ? crons.length : 0)} 
+                />
+                <Metric
+                  label="Delayed"
+                  value={
+                    loading ? (
+                      <Skeleton className="h-6 w-12" />
+                    ) : (
+                      <span className={delayed.length > 0 ? "text-danger" : "text-success"}>
+                        {delayed.length}
+                      </span>
+                    )
+                  }
+                />
+              </div>
+            </section>
+
+            <Card padded={false} className="overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface-muted/50">
+                {!isSearchVisible ? (
+                  <>
+                    <h3 className="text-sm font-semibold text-fg">Cron Jobs</h3>
+                    <Button variant="ghost" size="icon" onClick={toggleSearch} className="size-8">
+                      <Search className="size-4 text-fg-muted" />
+                    </Button>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 w-full animate-in fade-in slide-in-from-right-2 duration-200">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-fg-muted" />
+                      <Input 
+                        autoFocus
+                        placeholder="Tìm kiếm cron..." 
+                        className="pl-9 h-8 text-sm"
+                        value={searchQuery}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value)
+                          setCurrentPage(1)
+                        }}
+                      />
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={toggleSearch} className="size-8">
+                      <X className="size-4 text-fg-muted" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+              
+              <div className="min-h-[300px]">
+                {loading ? (
+                  <div className="divide-y divide-border px-4">
+                    {[...Array(PAGE_LIMIT)].map((_, i) => (
+                      <div key={i} className="flex items-center gap-3 py-4">
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-4 w-1/2" />
+                          <Skeleton className="h-3 w-1/4" />
+                        </div>
+                        <Skeleton className="h-4 w-20" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col">
+                    <Table
+                      className="border-0 rounded-none shadow-none"
+                      rows={paginatedCrons}
+                      rowKey={(row) => row.id ?? row.name}
+                      wrap
+                      onRowClick={(row) => setViewingCron(row)}
+                      empty={
+                        <EmptyState 
+                          title="Không có cron nào" 
+                          description="Có vẻ như instance này không có cron job nào đang chạy."
+                          icon={<PackageOpen className="size-8 opacity-20" />}
+                          className="border-0 rounded-none py-20"
+                        />
+                      }
+                      columns={[
+                        { 
+                          key: 'name', 
+                          header: <SortHeader label="Tên Cron" sortKey="name" />, 
+                          cell: (row) => (
+                            <div className="font-medium break-words py-1">
+                              {row.name}
+                            </div>
+                          )
+                        },
+                        { 
+                          key: 'nextcall', 
+                          header: <SortHeader label="Lần chạy tới" sortKey="nextcall" />, 
+                          cell: (row) => {
+                            const isLate = new Date(row.nextcall + 'Z') < now
+                            return (
+                              <div className="flex flex-col py-1">
+                                <span className={cn("text-sm whitespace-nowrap", isLate && "text-danger font-medium")}>
+                                  {formatDateTime(row.nextcall).split(' ')[0]}
+                                </span>
+                                <span className="text-[10px] text-fg-muted whitespace-nowrap">
+                                  {formatDateTime(row.nextcall).split(' ')[1]}
+                                </span>
+                              </div>
+                            )
+                          }
+                        },
+                        { 
+                          key: 'active', 
+                          header: <SortHeader label="Trạng thái" sortKey="active" />, 
+                          hideOnMobile: true, 
+                          cell: (row) => row.active ? <Badge tone="success">Active</Badge> : <Badge /> 
+                        }
+                      ]}
+                    />
+                    
+                    {pageCount > 1 && (
+                      <div className="px-4 py-3 border-t border-border bg-surface-muted/30">
+                        <Pagination 
+                          page={currentPage} 
+                          pageCount={pageCount} 
+                          onChange={setCurrentPage} 
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </Card>
+          </>
+        ) : (
+          <Card>
+            <CardHeader title="Cài đặt" description="Quản lý thông báo và cấu hình chung" />
+            <div className="py-20 text-center text-fg-muted">
+              <Settings size={48} className="mx-auto opacity-10 mb-4" />
+              <p>Tính năng cài đặt đang được phát triển.</p>
+            </div>
+          </Card>
+        )}
       </main>
+
+      <BottomNav
+        active={activeTab}
+        onChange={(id) => setActiveTab(id as any)}
+        items={[
+          { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+          { id: 'settings', label: 'Settings', icon: Settings },
+        ]}
+      />
+
 
       <Modal
         open={isModalOpen}
