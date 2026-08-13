@@ -156,17 +156,27 @@ app.post("/api/configs/:id/test-email", async (c) => {
   ).bind(id, email).first();
   if (!config) return c.json({ error: "Not found" }, 404);
 
-  const res = await c.env.MAILER.fetch(new Request("https://mailer/send", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      to: email,
-      subject: `[Odoo Monitor] Test email - ${config.name}`,
-      text: `Đây là email test cho instance "${config.name}" (${config.env}). Nếu bạn nhận được email này, cấu hình gửi mail đang hoạt động bình thường.`,
-    }),
-  }));
-  if (!res.ok) return c.json({ error: "Mailer failed" }, 502);
-  return c.json({ success: true });
+  try {
+    const res = await c.env.MAILER.fetch(new Request("https://mailer/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        to: email,
+        subject: `[Odoo Monitor] Test email - ${config.name}`,
+        text: `Đây là email test cho instance "${config.name}" (${config.env}). Nếu bạn nhận được email này, cấu hình gửi mail đang hoạt động bình thường.`,
+      }),
+    }));
+    
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error(`Mailer failed with status ${res.status}:`, errorText);
+      return c.json({ error: `Mailer failed: ${res.status}` }, 502);
+    }
+    return c.json({ success: true });
+  } catch (e: any) {
+    console.error("Mailer fetch crash:", e);
+    return c.json({ error: e.message }, 500);
+  }
 });
 
 app.get("/api/crons", async (c) => {
