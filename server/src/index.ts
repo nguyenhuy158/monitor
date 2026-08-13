@@ -1,13 +1,10 @@
 import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 import { getCrons } from "./odoo";
 
 export interface Env {
   SSO_ISSUER: string;
-  ODOO_URL: string;
-  ODOO_DB: string;
-  ODOO_USER: string;
-  ODOO_PASSWORD: string;
   ALERT_EMAIL: string;
   MAILER: { fetch: (req: Request) => Promise<Response> };
   ASSETS: { fetch: (req: Request) => Promise<Response> };
@@ -16,16 +13,27 @@ export interface Env {
 
 const app = new Hono<{ Bindings: Env }>();
 
+// SSO Configuration
+const SSO_COOKIE = "huyab_sso";
+let _jwks: any = null;
+
+const getJWKS = (issuer: string) => {
+  if (!_jwks) _jwks = createRemoteJWKSet(new URL(`${issuer}/.well-known/jwks.json`));
+  return _jwks;
+};
+
 // Middleware check auth & lấy user email
 const getAuthUser = async (c: any) => {
-  const session = getCookie(c, "session");
-  if (!session) return null;
-  // Giả sử decode JWT để lấy email (tạm thời mockup hoặc dùng logic jose sau)
-  // Trong dự án SSO của bạn, session lưu JWT.
+  const token = getCookie(c, SSO_COOKIE);
+  if (!token) return null;
+
   try {
-    const payload = JSON.parse(atob(session.split('.')[1]));
+    const { payload } = await jwtVerify(token, getJWKS(c.env.SSO_ISSUER), {
+      issuer: c.env.SSO_ISSUER,
+    });
     return payload.email;
-  } catch {
+  } catch (e) {
+    console.error("JWT Verify failed:", e);
     return null;
   }
 };
