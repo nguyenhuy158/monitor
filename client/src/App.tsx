@@ -70,7 +70,7 @@ export default function App() {
   const [userSettings, setUserSettings] = useState({ alert_delay_minutes: 30 })
   const [isUpdatingSettings, setIsUpdatingSettings] = useState(false)
   
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'stats' | 'settings'>('dashboard')
+  const [activeTab, setActiveTab] = useState<'stats' | 'dashboard' | 'settings'>('stats')
   const [allCronsData, setAllCronsData] = useState<Record<string, any[]>>({})
   const [loadingAllCrons, setLoadingAllCrons] = useState(false)
   
@@ -461,20 +461,20 @@ export default function App() {
           <div className="flex items-center gap-2">
             <nav className="hidden lg:flex items-center gap-1 mr-4 border-r border-border pr-4">
               <Button 
-                variant={activeTab === 'dashboard' ? 'primary' : 'ghost'} 
-                size="sm" 
-                onClick={() => setActiveTab('dashboard')}
-                leftIcon={<LayoutDashboard size={16} />}
-              >
-                Dashboard
-              </Button>
-              <Button 
                 variant={activeTab === 'stats' ? 'primary' : 'ghost'} 
                 size="sm" 
                 onClick={() => setActiveTab('stats')}
                 leftIcon={<BarChart3 size={16} />}
               >
                 Stats
+              </Button>
+              <Button 
+                variant={activeTab === 'dashboard' ? 'primary' : 'ghost'} 
+                size="sm" 
+                onClick={() => setActiveTab('dashboard')}
+                leftIcon={<LayoutDashboard size={16} />}
+              >
+                Dashboard
               </Button>
               <Button 
                 variant={activeTab === 'settings' ? 'primary' : 'ghost'} 
@@ -894,8 +894,8 @@ export default function App() {
         active={activeTab}
         onChange={(id) => setActiveTab(id as any)}
         items={[
-          { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
           { id: 'stats', label: 'Stats', icon: BarChart3 },
+          { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
           { id: 'settings', label: 'Settings', icon: Settings },
         ]}
       />
