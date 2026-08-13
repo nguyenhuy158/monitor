@@ -201,7 +201,13 @@ export default function App() {
               </>
             )}
           </div>
-          <Button block className="sm:w-auto" leftIcon={<Plus className="size-4" />} onClick={openAddModal}>Add Odoo Instance</Button>
+          <Button 
+            size="icon" 
+            className="sm:w-auto" 
+            leftIcon={<Plus className="size-4" />} 
+            onClick={openAddModal}
+            aria-label="Add Odoo Instance"
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:gap-6">
@@ -247,8 +253,8 @@ export default function App() {
         title={modalMode === 'add' ? "Add Odoo Instance" : "Edit Odoo Instance"}
         footer={
           <>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddConfig}>{modalMode === 'add' ? 'Save' : 'Update'}</Button>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Hủy</Button>
+            <Button onClick={handleAddConfig}>{modalMode === 'add' ? 'Lưu' : 'Cập nhật'}</Button>
           </>
         }
       >
