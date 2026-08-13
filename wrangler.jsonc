@@ -7,6 +7,10 @@
   "observability": {
     "enabled": true
   },
+  "assets": {
+    "directory": "./src/web/dist",
+    "binding": "ASSETS"
+  },
   "vars": {
     "SSO_ISSUER": "https://auth.huyab.click",
     "ODOO_URL": "",
