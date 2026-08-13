@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
-import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Search, X, MoreVertical, LogOut } from 'lucide-react'
-import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast, Pagination, Menu, Avatar } from '@ui'
+import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Search, X, MoreVertical, LogOut, PackageOpen } from 'lucide-react'
+import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast, Pagination, Menu, Avatar, Skeleton, EmptyState } from '@ui'
 
 const ENV_OPTIONS = [
   { value: 'dev', label: 'Dev' },
@@ -40,6 +40,7 @@ function Logo() {
 export default function App() {
   const toast = useToast()
   const [configs, setConfigs] = useState([])
+  const [loadingConfigs, setLoadingConfigs] = useState(true)
   const [selectedConfigId, setSelectedConfigId] = useState('')
   const [crons, setCrons] = useState([])
   const [loading, setLoading] = useState(false)
@@ -47,6 +48,7 @@ export default function App() {
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add')
   const [newConfig, setNewConfig] = useState({ name: '', url: '', db: '', username: '', password: '', env: 'prod' })
   const [user, setUser] = useState(null)
+  const [loadingUser, setLoadingUser] = useState(true)
   const [isSendingEmail, setIsSendingEmail] = useState(false)
   
   const [currentPage, setCurrentPage] = useState(1)
@@ -56,16 +58,23 @@ export default function App() {
   const PAGE_LIMIT = 5
 
   useEffect(() => {
-    fetch('/api/me').then(res => res.json()).then(data => {
-      if (data.authenticated) setUser(data)
-    })
+    fetch('/api/me')
+      .then(res => res.json())
+      .then(data => {
+        if (data.authenticated) setUser(data)
+      })
+      .finally(() => setLoadingUser(false))
   }, [])
 
   const fetchConfigs = () => {
-    fetch('/api/configs').then(res => res.json()).then(data => {
-      setConfigs(data)
-      if (data.length > 0 && !selectedConfigId) setSelectedConfigId(data[0].id)
-    })
+    setLoadingConfigs(true)
+    fetch('/api/configs')
+      .then(res => res.json())
+      .then(data => {
+        setConfigs(data)
+        if (data.length > 0 && !selectedConfigId) setSelectedConfigId(data[0].id)
+      })
+      .finally(() => setLoadingConfigs(false))
   }
 
   useEffect(() => {
@@ -218,6 +227,20 @@ export default function App() {
 
   const delayed = Array.isArray(crons) ? crons.filter(c => new Date(c.nextcall + 'Z') < now) : []
 
+  if (loadingUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-bg p-4">
+        <div className="flex flex-col items-center gap-4">
+          <Logo />
+          <div className="flex items-center gap-2 text-sm text-fg-muted">
+            <RefreshCw className="size-4 animate-spin" />
+            <span>Đang xác thực...</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const toggleSort = (key: string) => {
     setSortConfig(current => {
       if (current.key === key) {
@@ -312,15 +335,19 @@ export default function App() {
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <div className="flex-1">
-              <Select
-                value={selectedConfigId}
-                onChange={(e) => setSelectedConfigId(e.target.value)}
-                className="h-10"
-              >
-                {(configs || []).map(c => (
-                  <option key={c.id} value={String(c.id)}>{c.name}</option>
-                ))}
-              </Select>
+              {loadingConfigs ? (
+                <Skeleton className="h-10 w-full" />
+              ) : (
+                <Select
+                  value={selectedConfigId}
+                  onChange={(e) => setSelectedConfigId(e.target.value)}
+                  className="h-10"
+                >
+                  {(configs || []).map(c => (
+                    <option key={c.id} value={String(c.id)}>{c.name}</option>
+                  ))}
+                </Select>
+              )}
             </div>
             {selectedConfig && (
               <div className="flex items-center gap-1.5">
@@ -379,13 +406,20 @@ export default function App() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Metric label="Active Crons" value={Array.isArray(crons) ? crons.length : 0} />
+            <Metric 
+              label="Active Crons" 
+              value={loading ? <Skeleton className="h-6 w-12" /> : (Array.isArray(crons) ? crons.length : 0)} 
+            />
             <Metric
               label="Delayed"
               value={
-                <span className={delayed.length > 0 ? "text-danger" : "text-success"}>
-                  {delayed.length}
-                </span>
+                loading ? (
+                  <Skeleton className="h-6 w-12" />
+                ) : (
+                  <span className={delayed.length > 0 ? "text-danger" : "text-success"}>
+                    {delayed.length}
+                  </span>
+                )
               }
             />
           </div>
@@ -424,9 +458,16 @@ export default function App() {
           
           <div className="min-h-[300px]">
             {loading ? (
-              <div className="p-12 text-center text-fg-muted flex flex-col items-center gap-2">
-                <RefreshCw className="size-6 animate-spin opacity-20" />
-                <span className="text-sm">Đang tải dữ liệu...</span>
+              <div className="divide-y divide-border px-4">
+                {[...Array(PAGE_LIMIT)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 py-4">
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-1/2" />
+                      <Skeleton className="h-3 w-1/4" />
+                    </div>
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="flex flex-col">
@@ -434,7 +475,14 @@ export default function App() {
                   className="border-0 rounded-none shadow-none"
                   rows={paginatedCrons}
                   rowKey={(row) => row.id ?? row.name}
-                  empty={<div className="p-12 text-center text-fg-muted">Không có cron nào</div>}
+                  empty={
+                    <EmptyState 
+                      title="Không có cron nào" 
+                      description="Có vẻ như instance này không có cron job nào đang chạy."
+                      icon={<PackageOpen className="size-8 opacity-20" />}
+                      className="border-0 rounded-none py-20"
+                    />
+                  }
                   columns={[
                     { 
                       key: 'name', 
