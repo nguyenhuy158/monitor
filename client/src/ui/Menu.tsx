@@ -51,7 +51,7 @@ export function Menu({ trigger, items, align = "right", className }: MenuProps) 
           role="menu"
           style={{ animation: "ui-slide-down 120ms ease-out" }}
           className={cn(
-            "absolute z-50 mt-1 min-w-44 overflow-hidden rounded-ui border border-border bg-surface py-1 shadow-lg",
+            "absolute z-50 mt-1 min-w-48 overflow-hidden rounded-ui border border-border bg-surface py-1.5 shadow-xl ring-1 ring-black/5",
             align === "right" ? "right-0" : "left-0",
           )}
         >
@@ -66,14 +66,14 @@ export function Menu({ trigger, items, align = "right", className }: MenuProps) 
                 item.onSelect();
               }}
               className={cn(
-                "flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm outline-none transition",
+                "flex w-full items-center gap-3 px-3 py-2 text-left text-sm outline-none transition",
                 "hover:bg-surface-muted focus-visible:bg-surface-muted",
                 "disabled:pointer-events-none disabled:opacity-50",
                 item.destructive ? "text-danger" : "text-fg",
               )}
             >
-              {item.icon}
-              {item.label}
+              {item.icon && <span className="shrink-0 opacity-70">{item.icon}</span>}
+              <span className="flex-1 truncate">{item.label}</span>
             </button>
           ))}
         </div>

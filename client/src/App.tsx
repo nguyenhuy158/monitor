@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Search, X, MoreVertical, LogOut, PackageOpen } from 'lucide-react'
-import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast, Pagination, Menu, Avatar, Skeleton, EmptyState, cn } from '@ui'
+import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast, Pagination, Menu, Avatar, Skeleton, EmptyState, cn, Combobox } from '@ui'
 
 const ENV_OPTIONS = [
   { value: 'dev', label: 'Dev' },
@@ -226,6 +226,14 @@ export default function App() {
 
   const pageCount = Math.ceil(sortedCrons.length / PAGE_LIMIT)
 
+  const instanceOptions = useMemo(() => {
+    return (configs || []).map(c => ({
+      value: String(c.id),
+      label: c.name,
+      description: c.url.replace(/^https?:\/\//, '')
+    }))
+  }, [configs])
+
   const delayed = Array.isArray(crons) ? crons.filter(c => new Date(c.nextcall + 'Z') < now) : []
 
   if (loadingUser) {
@@ -339,15 +347,13 @@ export default function App() {
               {loadingConfigs ? (
                 <Skeleton className="h-10 w-full" />
               ) : (
-                <Select
+                <Combobox
                   value={selectedConfigId}
-                  onChange={(e) => setSelectedConfigId(e.target.value)}
-                  className="h-10"
-                >
-                  {(configs || []).map(c => (
-                    <option key={c.id} value={String(c.id)}>{c.name}</option>
-                  ))}
-                </Select>
+                  onChange={setSelectedConfigId}
+                  options={instanceOptions}
+                  placeholder="Chọn instance Odoo..."
+                  className="w-full"
+                />
               )}
             </div>
             {selectedConfig && (

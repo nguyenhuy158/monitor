@@ -157,10 +157,10 @@ export function Combobox({
           id={listId}
           role="listbox"
           style={{ animation: "ui-slide-down 120ms ease-out" }}
-          className="absolute z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-ui border border-border bg-surface py-1 shadow-lg"
+          className="absolute z-50 mt-1 max-h-72 w-full overflow-y-auto rounded-ui border border-border bg-surface py-1.5 shadow-xl ring-1 ring-black/5"
         >
           {filtered.length === 0 && (
-            <li className="px-3 py-3 text-sm text-fg-muted">{emptyLabel}</li>
+            <li className="px-3 py-4 text-center text-sm text-fg-muted italic">{emptyLabel}</li>
           )}
 
           {filtered.map((option, index) => (
@@ -169,28 +169,31 @@ export function Combobox({
                 type="button"
                 role="option"
                 aria-selected={option.value === value}
-                // pointerdown chu khong phai click: click xay ra sau blur cua o
-                // nhap, luc do danh sach da dong nen khong bat duoc lua chon.
                 onPointerDown={(event) => {
                   event.preventDefault();
                   commit(option);
                 }}
                 onPointerEnter={() => setHighlight(index)}
                 className={cn(
-                  "flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition",
+                  "flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition",
                   index === highlight ? "bg-surface-muted" : "bg-transparent",
                   option.value === value ? "font-semibold text-primary" : "text-fg",
                 )}
               >
-                {option.icon}
+                {option.icon && <span className="shrink-0 opacity-70">{option.icon}</span>}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate">{option.label}</span>
                   {option.description && (
-                    <span className="block truncate text-xs text-fg-muted">
+                    <span className="block truncate text-[11px] leading-tight text-fg-muted opacity-80">
                       {option.description}
                     </span>
                   )}
                 </span>
+                {option.value === value && (
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0 text-primary">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                )}
               </button>
             </li>
           ))}
