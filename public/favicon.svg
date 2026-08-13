@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- base -->
+  <rect x="16" y="49" width="32" height="8" rx="4" fill="#8B5CF6" stroke="#2D2A4A" stroke-width="2.5"/>
+  <!-- neck -->
+  <rect x="27" y="43" width="10" height="7" fill="#2D2A4A"/>
+  <!-- monitor body -->
+  <rect x="7" y="6" width="50" height="38" rx="9" fill="#C9B8FA" stroke="#2D2A4A" stroke-width="3"/>
+  <!-- screen inset -->
+  <rect x="12" y="11" width="40" height="28" rx="6" fill="#EFE8FF"/>
+  <!-- blush -->
+  <ellipse cx="20" cy="29" rx="3.2" ry="2.2" fill="#F9A8D4" opacity="0.8"/>
+  <ellipse cx="44" cy="29" rx="3.2" ry="2.2" fill="#F9A8D4" opacity="0.8"/>
+  <!-- eyes -->
+  <circle cx="24" cy="24" r="4.2" fill="#2D2A4A"/>
+  <circle cx="40" cy="24" r="4.2" fill="#2D2A4A"/>
+  <circle cx="22.6" cy="22.4" r="1.4" fill="#fff"/>
+  <circle cx="38.6" cy="22.4" r="1.4" fill="#fff"/>
+  <!-- smile -->
+  <path d="M28 30 Q32 34 36 30" stroke="#2D2A4A" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <!-- sparkle -->
+  <path d="M53 12 L54.3 15 L57.3 16.3 L54.3 17.6 L53 20.6 L51.7 17.6 L48.7 16.3 L51.7 15 Z" fill="#FDE68A"/>
+  <circle cx="10" cy="45" r="1.6" fill="#FDE68A"/>
+</svg>

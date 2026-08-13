@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Plus, Copy, Mail } from 'lucide-react'
-import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup } from '@ui'
+import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast } from '@ui'
 
 const ENV_OPTIONS = [
   { value: 'dev', label: 'Dev' },
@@ -23,6 +23,7 @@ function formatDateTime(value) {
 }
 
 export default function App() {
+  const toast = useToast()
   const [configs, setConfigs] = useState([])
   const [selectedConfigId, setSelectedConfigId] = useState('')
   const [crons, setCrons] = useState([])
@@ -30,7 +31,7 @@ export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [newConfig, setNewConfig] = useState({ name: '', url: '', db: '', username: '', password: '', env: 'prod' })
   const [user, setUser] = useState(null)
-  const [testEmailStatus, setTestEmailStatus] = useState('')
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
 
   useEffect(() => {
     fetch('/api/me').then(res => res.json()).then(data => {
@@ -66,24 +67,42 @@ export default function App() {
     fetch('/api/configs', {
       method: 'POST',
       body: JSON.stringify(newConfig)
-    }).then(() => {
-      setIsModalOpen(false)
-      fetchConfigs()
-    })
+    }).then(res => {
+      if (res.ok) {
+        toast.success('Đã thêm instance thành công')
+        setIsModalOpen(false)
+        fetchConfigs()
+      } else {
+        toast.error('Lỗi khi thêm instance')
+      }
+    }).catch(() => toast.error('Lỗi kết nối'))
   }
 
   const handleDuplicateConfig = () => {
     if (!selectedConfigId) return
-    fetch(`/api/configs/${selectedConfigId}/duplicate`, { method: 'POST' }).then(() => fetchConfigs())
+    fetch(`/api/configs/${selectedConfigId}/duplicate`, { method: 'POST' }).then(res => {
+      if (res.ok) {
+        toast.success('Đã nhân bản instance')
+        fetchConfigs()
+      } else {
+        toast.error('Lỗi khi nhân bản')
+      }
+    }).catch(() => toast.error('Lỗi kết nối'))
   }
 
   const handleTestEmail = () => {
     if (!selectedConfigId) return
-    setTestEmailStatus('sending')
+    setIsSendingEmail(true)
     fetch(`/api/configs/${selectedConfigId}/test-email`, { method: 'POST' })
-      .then(res => res.ok ? setTestEmailStatus('sent') : setTestEmailStatus('error'))
-      .catch(() => setTestEmailStatus('error'))
-      .finally(() => setTimeout(() => setTestEmailStatus(''), 3000))
+      .then(res => {
+        if (res.ok) {
+          toast.success('Đã gửi email thử nghiệm')
+        } else {
+          toast.error('Lỗi khi gửi email')
+        }
+      })
+      .catch(() => toast.error('Lỗi kết nối'))
+      .finally(() => setIsSendingEmail(false))
   }
 
   const selectedConfig = (configs || []).find(c => String(c.id) === String(selectedConfigId))
@@ -141,13 +160,11 @@ export default function App() {
                   variant="outline"
                   size="icon"
                   aria-label="Test send email"
-                  loading={testEmailStatus === 'sending'}
+                  loading={isSendingEmail}
                   onClick={handleTestEmail}
                 >
                   <Mail className="size-4" />
                 </Button>
-                {testEmailStatus === 'sent' && <Badge tone="success">Đã gửi</Badge>}
-                {testEmailStatus === 'error' && <Badge tone="danger">Lỗi gửi</Badge>}
               </>
             )}
           </div>
