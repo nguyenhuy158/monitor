@@ -13,7 +13,6 @@ export default function App() {
   useEffect(() => {
     fetch('/api/me').then(res => res.json()).then(data => {
       if (data.authenticated) setUser(data)
-      else window.location.href = `https://auth.huyab.click/login?redirect_uri=${window.location.href}`
     })
   }, [])
 
@@ -54,7 +53,25 @@ export default function App() {
   const now = new Date()
   const delayed = crons.filter(c => new Date(c.nextcall + 'Z') < now)
 
-  if (!user) return null
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <Card className="max-w-md w-full text-center space-y-6 py-12">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight">Odoo Monitor</h1>
+            <p className="text-gray-500">Giám sát Cron Job Odoo và cảnh báo tức thì</p>
+          </div>
+          <Button 
+            size="lg" 
+            className="w-full"
+            onClick={() => window.location.href = `https://auth.huyab.click/login?redirect_uri=${window.location.href}`}
+          >
+            Login with Google
+          </Button>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
