@@ -79,11 +79,14 @@ export default function App() {
       <main className="max-w-7xl mx-auto p-6 space-y-6">
         <div className="flex justify-between items-center">
           <div className="w-64">
-            <Select 
-              value={selectedConfigId} 
+            <Select
+              value={selectedConfigId}
               onChange={(e) => setSelectedConfigId(e.target.value)}
-              options={configs?.map(c => ({ label: c.name, value: String(c.id) })) || []}
-            />
+            >
+              {(configs || []).map(c => (
+                <option key={c.id} value={String(c.id)}>{c.name}</option>
+              ))}
+            </Select>
           </div>
           <Button onClick={() => setIsModalOpen(true)}>Add Odoo Instance</Button>
         </div>
@@ -94,19 +97,24 @@ export default function App() {
         </div>
 
         <Card header={<h2 className="text-lg font-semibold">Cron Jobs</h2>}>
-          <Table 
-            data={Array.isArray(crons) ? crons : []} 
-            loading={loading}
-            columns={[
-              { key: 'name', header: 'Name' },
-              { key: 'nextcall', header: 'Next Call', render: (v) => (
-                <div className="flex gap-2 items-center">
-                  {v} {new Date(v + 'Z') < now && <Badge tone="critical">Trễ</Badge>}
-                </div>
-              )},
-              { key: 'active', header: 'Status', render: (v) => v ? <Badge tone="positive">Active</Badge> : <Badge /> }
-            ]}
-          />
+          {loading ? (
+            <div className="p-6 text-center text-fg-muted">Loading...</div>
+          ) : (
+            <Table
+              rows={Array.isArray(crons) ? crons : []}
+              rowKey={(row) => row.id ?? row.name}
+              empty={<div className="p-6 text-center text-fg-muted">Không có cron nào</div>}
+              columns={[
+                { key: 'name', header: 'Name', cell: (row) => row.name },
+                { key: 'nextcall', header: 'Next Call', cell: (row) => (
+                  <div className="flex gap-2 items-center">
+                    {row.nextcall} {new Date(row.nextcall + 'Z') < now && <Badge tone="critical">Trễ</Badge>}
+                  </div>
+                )},
+                { key: 'active', header: 'Status', cell: (row) => row.active ? <Badge tone="positive">Active</Badge> : <Badge /> }
+              ]}
+            />
+          )}
         </Card>
       </main>
 
