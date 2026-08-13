@@ -80,6 +80,19 @@ export default function App() {
   const [isSearchVisible, setIsSearchVisible] = useState(false)
   const PAGE_LIMIT = 5
 
+  // Cập nhật title là giờ hiện tại
+  useEffect(() => {
+    const updateTitle = () => {
+      const now = new Date()
+      const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`
+      document.title = timeStr
+    }
+
+    updateTitle()
+    const interval = setInterval(updateTitle, 10000) // Cập nhật mỗi 10s để chính xác phút
+    return () => clearInterval(interval)
+  }, [])
+
   useEffect(() => {
     fetch('/api/me')
       .then(res => res.json())
