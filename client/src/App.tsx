@@ -51,7 +51,7 @@ export default function App() {
   }
 
   const now = new Date()
-  const delayed = crons.filter(c => new Date(c.nextcall + 'Z') < now)
+  const delayed = Array.isArray(crons) ? crons.filter(c => new Date(c.nextcall + 'Z') < now) : []
 
   if (!user) {
     return (
@@ -82,20 +82,20 @@ export default function App() {
             <Select 
               value={selectedConfigId} 
               onChange={(e) => setSelectedConfigId(e.target.value)}
-              options={configs.map(c => ({ label: c.name, value: c.id }))}
+              options={configs?.map(c => ({ label: c.name, value: String(c.id) })) || []}
             />
           </div>
           <Button onClick={() => setIsModalOpen(true)}>Add Odoo Instance</Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card><Metric label="Active Crons" value={crons.length} /></Card>
+          <Card><Metric label="Active Crons" value={Array.isArray(crons) ? crons.length : 0} /></Card>
           <Card><Metric label="Delayed" value={delayed.length} tone={delayed.length > 0 ? "critical" : "positive"} /></Card>
         </div>
 
         <Card header={<h2 className="text-lg font-semibold">Cron Jobs</h2>}>
           <Table 
-            data={crons} 
+            data={Array.isArray(crons) ? crons : []} 
             loading={loading}
             columns={[
               { key: 'name', header: 'Name' },
