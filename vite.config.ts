@@ -11,7 +11,11 @@ export default defineConfig({
       '@ui': path.resolve(__dirname, './client/src/ui'),
     },
   },
+  css: {
+    transformer: 'lightningcss',
+  },
   build: {
     outDir: 'dist',
+    cssMinify: 'lightningcss',
   }
 })
