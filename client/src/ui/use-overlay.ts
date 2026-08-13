@@ -16,6 +16,12 @@ export function useOverlay(open: boolean, onClose: () => void) {
   const ref = useRef<HTMLDivElement>(null);
   const restoreTo = useRef<HTMLElement | null>(null);
 
+  // Ham onClose thuong duoc truyen vao dang arrow function moi moi lan render.
+  // Giu no trong ref de effect ben duoi chi phu thuoc `open`, khong bi chay lai
+  // (va giam focus lai tu dau) moi khi component cha re-render.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   useEffect(() => {
     if (!open) return;
 
@@ -28,7 +34,7 @@ export function useOverlay(open: boolean, onClose: () => void) {
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        onClose();
+        onCloseRef.current();
         return;
       }
 
@@ -61,7 +67,7 @@ export function useOverlay(open: boolean, onClose: () => void) {
       document.body.style.overflow = previousOverflow;
       restoreTo.current?.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   return ref;
 }

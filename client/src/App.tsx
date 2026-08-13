@@ -76,9 +76,9 @@ export default function App() {
   return (
     <div className="min-h-screen bg-bg">
       <HeaderBar title="Odoo Monitor" />
-      <main className="max-w-7xl mx-auto p-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <div className="w-64">
+      <main className="max-w-7xl mx-auto p-4 space-y-4 sm:p-6 sm:space-y-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="w-full sm:w-64">
             <Select
               value={selectedConfigId}
               onChange={(e) => setSelectedConfigId(e.target.value)}
@@ -88,10 +88,10 @@ export default function App() {
               ))}
             </Select>
           </div>
-          <Button onClick={() => setIsModalOpen(true)}>Add Odoo Instance</Button>
+          <Button block className="sm:w-auto" onClick={() => setIsModalOpen(true)}>Add Odoo Instance</Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 gap-3 sm:gap-6">
           <Card><Metric label="Active Crons" value={Array.isArray(crons) ? crons.length : 0} /></Card>
           <Card>
             <Metric
@@ -121,7 +121,7 @@ export default function App() {
                     {row.nextcall} {new Date(row.nextcall + 'Z') < now && <Badge tone="danger">Trễ</Badge>}
                   </div>
                 )},
-                { key: 'active', header: 'Status', cell: (row) => row.active ? <Badge tone="success">Active</Badge> : <Badge /> }
+                { key: 'active', header: 'Status', hideOnMobile: true, cell: (row) => row.active ? <Badge tone="success">Active</Badge> : <Badge /> }
               ]}
             />
           )}
