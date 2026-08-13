@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, Copy, Mail } from 'lucide-react'
+import { Plus, Copy, Mail, Edit2 } from 'lucide-react'
 import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast } from '@ui'
 
 const ENV_OPTIONS = [
@@ -29,6 +29,7 @@ export default function App() {
   const [crons, setCrons] = useState([])
   const [loading, setLoading] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add')
   const [newConfig, setNewConfig] = useState({ name: '', url: '', db: '', username: '', password: '', env: 'prod' })
   const [user, setUser] = useState(null)
   const [isSendingEmail, setIsSendingEmail] = useState(false)
@@ -64,18 +65,42 @@ export default function App() {
   }, [selectedConfigId])
 
   const handleAddConfig = () => {
-    fetch('/api/configs', {
-      method: 'POST',
+    const isEdit = modalMode === 'edit'
+    const url = isEdit ? `/api/configs/${selectedConfigId}` : '/api/configs'
+    const method = isEdit ? 'PUT' : 'POST'
+
+    fetch(url, {
+      method,
       body: JSON.stringify(newConfig)
     }).then(res => {
       if (res.ok) {
-        toast.success('Đã thêm instance thành công')
+        toast.success(isEdit ? 'Đã cập nhật instance' : 'Đã thêm instance thành công')
         setIsModalOpen(false)
         fetchConfigs()
       } else {
-        toast.error('Lỗi khi thêm instance')
+        toast.error(isEdit ? 'Lỗi khi cập nhật' : 'Lỗi khi thêm instance')
       }
     }).catch(() => toast.error('Lỗi kết nối'))
+  }
+
+  const openAddModal = () => {
+    setModalMode('add')
+    setNewConfig({ name: '', url: '', db: '', username: '', password: '', env: 'prod' })
+    setIsModalOpen(true)
+  }
+
+  const openEditModal = () => {
+    if (!selectedConfig) return
+    setModalMode('edit')
+    setNewConfig({
+      name: selectedConfig.name,
+      url: selectedConfig.url,
+      db: selectedConfig.db,
+      username: selectedConfig.username,
+      password: selectedConfig.password,
+      env: selectedConfig.env
+    })
+    setIsModalOpen(true)
   }
 
   const handleDuplicateConfig = () => {
@@ -151,6 +176,14 @@ export default function App() {
                 <Button
                   variant="outline"
                   size="icon"
+                  aria-label="Edit instance"
+                  onClick={openEditModal}
+                >
+                  <Edit2 className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
                   aria-label="Duplicate instance"
                   onClick={handleDuplicateConfig}
                 >
@@ -168,7 +201,7 @@ export default function App() {
               </>
             )}
           </div>
-          <Button block className="sm:w-auto" leftIcon={<Plus className="size-4" />} onClick={() => setIsModalOpen(true)}>Add Odoo Instance</Button>
+          <Button block className="sm:w-auto" leftIcon={<Plus className="size-4" />} onClick={openAddModal}>Add Odoo Instance</Button>
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:gap-6">
@@ -211,11 +244,11 @@ export default function App() {
       <Modal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Add Odoo Instance"
+        title={modalMode === 'add' ? "Add Odoo Instance" : "Edit Odoo Instance"}
         footer={
           <>
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddConfig}>Save</Button>
+            <Button onClick={handleAddConfig}>{modalMode === 'add' ? 'Save' : 'Update'}</Button>
           </>
         }
       >

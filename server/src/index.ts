@@ -65,6 +65,21 @@ app.post("/api/configs", async (c) => {
   return c.json({ success: true });
 });
 
+app.put("/api/configs/:id", async (c) => {
+  const email = await getAuthUser(c);
+  if (!email) return c.json({ error: "Unauthorized" }, 401);
+  const id = c.req.param("id");
+  const body = await c.req.json();
+  const env = ENVS.includes(body.env) ? body.env : "prod";
+
+  const { success } = await c.env.DB.prepare(
+    "UPDATE monitor_configs SET name = ?, url = ?, db = ?, username = ?, password = ?, env = ? WHERE id = ? AND user_email = ?"
+  ).bind(body.name, body.url, body.db, body.username, body.password, env, id, email).run();
+
+  if (!success) return c.json({ error: "Failed to update or not found" }, 404);
+  return c.json({ success: true });
+});
+
 app.post("/api/configs/:id/duplicate", async (c) => {
   const email = await getAuthUser(c);
   if (!email) return c.json({ error: "Unauthorized" }, 401);
