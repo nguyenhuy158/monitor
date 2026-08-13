@@ -8,7 +8,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './client/src'),
-      '@ui': path.resolve(__dirname, '../ui-kit/src/ui'),
+      '@ui': path.resolve(__dirname, './client/src/ui'),
     },
   },
   build: {
