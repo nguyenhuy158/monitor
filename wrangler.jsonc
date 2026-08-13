@@ -14,9 +14,6 @@
   "vars": {
     "SSO_ISSUER": "https://auth.huyab.click"
   },
-  "secrets": [
-    "MAILER_KEY"
-  ],
   "d1_databases": [
     {
       "binding": "DB",
