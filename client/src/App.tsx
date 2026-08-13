@@ -948,11 +948,15 @@ export default function App() {
               <div className="rounded-ui bg-surface-muted p-4 border border-border space-y-3">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-fg-muted">Thông tin tài khoản</h4>
                 <div className="flex items-center gap-3">
-                  <Avatar src={`https://www.gravatar.com/avatar/${btoa(user.email)}?d=mp`} size="sm" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{user.email}</p>
-                    <p className="text-[11px] text-fg-muted">Tài khoản SSO huyab auth</p>
-                  </div>
+                  {user && (
+                    <>
+                      <Avatar src={`https://www.gravatar.com/avatar/${btoa(user.email)}?d=mp`} size="sm" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{user.email}</p>
+                        <p className="text-[11px] text-fg-muted">Tài khoản SSO huyab auth</p>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
