@@ -18,14 +18,7 @@
   },
   "services": [{ "binding": "MAILER", "service": "mailer" }],
   "triggers": {
-    "crons": ["*/10 * * * *"]
+    "crons": ["0 * * * *"]
   },
-  "routes": [{ "pattern": "moni.huyab.click", "custom_domain": true }],
-  "build": {
-    "command": "pnpm run build",
-    "upload": {
-      "format": "modules",
-      "main": "server/src/index.ts"
-    }
-  }
+  "routes": [{ "pattern": "moni.huyab.click", "custom_domain": true }]
 }
