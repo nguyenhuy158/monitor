@@ -6,10 +6,10 @@ Giám sát Cron Job Odoo và cảnh báo tức thì qua email.
 - Build: `pnpm run build`
 - Dev (Backend + Frontend): `pnpm run dev`
 - Dev Client: `pnpm run dev:client`
-- Deploy: `pnpm run deploy`
+- Deploy: Chỉ push code lên GitHub, Cloudflare sẽ tự động build và deploy (Git Integration). KHÔNG chạy `wrangler deploy` local.
 
 ## Tech Stack
-- **Frontend**: React 19, Vite, Tailwind CSS v4, Lucide React.
+- **Frontend**: React 19, Vite, Tailwind CSS v4, Lucide React, LightningCSS.
 - **Backend**: Hono, Cloudflare Workers.
 - **Database**: Cloudflare D1.
 - **Auth**: SSO (huyab auth) via JWT.
@@ -32,3 +32,8 @@ Giám sát Cron Job Odoo và cảnh báo tức thì qua email.
 - Auto-reload dữ liệu mỗi 30s trên dashboard.
 - Sorting và Pagination (limit 5) cho danh sách Cron Jobs.
 - Mobile-first design, tối ưu cho iPhone/Android.
+- Sử dụng `LightningCSS` để minify CSS (đã cấu hình trong vite.config.ts).
+- Hiển thị thời gian trễ tương đối (`trễ 5m`, `trễ 2h`) cho các cron bị delay.
+- Hỗ trợ cá nhân hóa ngưỡng trễ cảnh báo (mặc định 30p) trong tab Settings.
+- Sử dụng `Combobox` (Searchable Dropdown) cho việc chọn Instance Odoo.
+- Tích hợp Skeleton Screens và Empty States cho trải nghiệm tải dữ liệu mượt mà.
