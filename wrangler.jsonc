@@ -12,8 +12,7 @@
     "command": "pnpm run build"
   },
   "vars": {
-    "SSO_ISSUER": "https://auth.huyab.click",
-    "MAILER_KEY": ""
+    "SSO_ISSUER": "https://auth.huyab.click"
   },
   "d1_databases": [
     {
