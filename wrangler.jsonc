@@ -20,5 +20,12 @@
   "triggers": {
     "crons": ["*/10 * * * *"]
   },
-  "routes": [{ "pattern": "moni.huyab.click", "custom_domain": true }]
+  "routes": [{ "pattern": "moni.huyab.click", "custom_domain": true }],
+  "build": {
+    "command": "pnpm run build",
+    "upload": {
+      "format": "modules",
+      "main": "server/src/index.ts"
+    }
+  }
 }
