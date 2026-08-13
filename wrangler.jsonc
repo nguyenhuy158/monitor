@@ -23,5 +23,5 @@
     }
   ],
   "services": [{ "binding": "MAILER", "service": "mailer" }],
-  "routes": [{ "pattern": "moni.huyab.click", "custom_domain": true }]
+  "routes": [{ "pattern": "alert.huyab.click", "custom_domain": true }]
 }
