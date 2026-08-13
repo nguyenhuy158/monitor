@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
-import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Search, X, MoreVertical, LogOut, PackageOpen, LayoutDashboard, Settings, BellRing, BarChart3 } from 'lucide-react'
+import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Search, X, MoreVertical, LogOut, PackageOpen, LayoutDashboard, Settings, BellRing, BarChart3, Activity, Server, Clock } from 'lucide-react'
 import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast, Pagination, Menu, Avatar, Skeleton, EmptyState, cn, Combobox, BottomNav, Switch } from '@ui'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
@@ -192,6 +192,9 @@ export default function App() {
       dev: { delayed: 0, total: 0 }
     }
 
+    let globalTotal = 0
+    let globalDelayed = 0
+
     configs.forEach(config => {
       const crons = allCronsData[config.id] || []
       const env = (config.env || 'prod') as keyof typeof envStats
@@ -202,13 +205,26 @@ export default function App() {
         envStats[env].delayed += delayedCount
         envStats[env].total += crons.length
       }
+
+      globalTotal += crons.length
+      globalDelayed += delayedCount
     })
 
-    return [
-      { name: 'Production', delayed: envStats.prod.delayed, total: envStats.prod.total, color: 'var(--ui-danger)' },
-      { name: 'Preprod', delayed: envStats.preprod.delayed, total: envStats.preprod.total, color: 'var(--ui-warning)' },
-      { name: 'Dev', delayed: envStats.dev.delayed, total: envStats.dev.total, color: 'var(--ui-fg-muted)' }
-    ]
+    const healthScore = globalTotal > 0 ? Math.round(((globalTotal - globalDelayed) / globalTotal) * 100) : 100
+
+    return {
+      envs: [
+        { name: 'Production', delayed: envStats.prod.delayed, total: envStats.prod.total, color: 'var(--ui-danger)' },
+        { name: 'Preprod', delayed: envStats.preprod.delayed, total: envStats.preprod.total, color: 'var(--ui-warning)' },
+        { name: 'Dev', delayed: envStats.dev.delayed, total: envStats.dev.total, color: 'var(--ui-fg-muted)' }
+      ],
+      global: {
+        totalInstances: configs.length,
+        totalCrons: globalTotal,
+        totalDelayed: globalDelayed,
+        healthScore
+      }
+    }
   }, [configs, allCronsData])
 
   const handleAddConfig = () => {
@@ -706,8 +722,42 @@ export default function App() {
           </>
         ) : activeTab === 'stats' ? (
           <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+              <Card className="flex flex-col items-start p-4 bg-primary/5 border-primary/10">
+                <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+                  <Server className="size-4 text-primary" />
+                </div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-fg-muted">Instances</p>
+                <p className="text-2xl font-black text-fg">{loadingAllCrons ? "..." : statsData.global.totalInstances}</p>
+              </Card>
+
+              <Card className="flex flex-col items-start p-4 bg-success/5 border-success/10">
+                <div className="size-8 rounded-lg bg-success/10 flex items-center justify-center mb-3">
+                  <Activity className="size-4 text-success" />
+                </div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-fg-muted">Tổng Crons</p>
+                <p className="text-2xl font-black text-fg">{loadingAllCrons ? "..." : statsData.global.totalCrons}</p>
+              </Card>
+
+              <Card className="flex flex-col items-start p-4 bg-danger/5 border-danger/10">
+                <div className="size-8 rounded-lg bg-danger/10 flex items-center justify-center mb-3">
+                  <Clock className="size-4 text-danger" />
+                </div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-fg-muted">Tổng Trễ</p>
+                <p className="text-2xl font-black text-danger">{loadingAllCrons ? "..." : statsData.global.totalDelayed}</p>
+              </Card>
+
+              <Card className="flex flex-col items-start p-4 bg-warning/5 border-warning/10">
+                <div className="size-8 rounded-lg bg-warning/10 flex items-center justify-center mb-3">
+                  <Activity className="size-4 text-warning" />
+                </div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-fg-muted">Health</p>
+                <p className="text-2xl font-black text-fg">{loadingAllCrons ? "..." : `${statsData.global.healthScore}%`}</p>
+              </Card>
+            </div>
+
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {statsData.map(stat => (
+              {statsData.envs.map(stat => (
                 <Card key={stat.name} className="flex flex-col items-center justify-center py-6">
                   <p className="text-xs font-bold uppercase tracking-widest text-fg-muted mb-1">{stat.name}</p>
                   <p className={cn("text-3xl font-black", stat.delayed > 0 ? "text-danger" : "text-success")}>
@@ -735,7 +785,7 @@ export default function App() {
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={statsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <BarChart data={statsData.envs} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--ui-border)" opacity={0.5} />
                       <XAxis 
                         dataKey="name" 
@@ -758,7 +808,7 @@ export default function App() {
                         }}
                       />
                       <Bar dataKey="delayed" radius={[4, 4, 0, 0]} barSize={40}>
-                        {statsData.map((entry, index) => (
+                        {statsData.envs.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Bar>
@@ -775,7 +825,7 @@ export default function App() {
               <div className="space-y-1">
                 <h4 className="text-sm font-bold text-primary">Phân tích nhanh</h4>
                 <p className="text-xs text-primary/80 leading-relaxed">
-                  {statsData.find(s => s.name === 'Production')?.delayed! > 0 
+                  {statsData.envs.find(s => s.name === 'Production')?.delayed! > 0 
                     ? "Cảnh báo: Đang có cron bị trễ trên Production. Hãy kiểm tra ngay lập tức để tránh gián đoạn dịch vụ."
                     : "Hệ thống hoạt động ổn định. Không có cron nào bị trễ trên Production."}
                 </p>
