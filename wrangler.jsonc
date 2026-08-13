@@ -26,5 +26,8 @@
     "enabled": true,
     "head_sampling_rate": 0.1
   },
+  "triggers": {
+    "crons": ["* * * * *"]
+  },
   "routes": [{ "pattern": "alert.huyab.click", "custom_domain": true }]
 }
