@@ -22,6 +22,20 @@ function formatDateTime(value) {
   return `${time} ${date}`
 }
 
+function getDelayText(nextCall) {
+  const diffMs = new Date() - new Date(nextCall + 'Z')
+  if (diffMs <= 0) return null
+  
+  const diffMins = Math.floor(diffMs / 60000)
+  if (diffMins < 1) return 'vừa xong'
+  if (diffMins < 60) return `trễ ${diffMins}m`
+  
+  const diffHours = Math.floor(diffMins / 60)
+  if (diffHours < 24) return `trễ ${diffHours}h`
+  
+  return `trễ ${Math.floor(diffHours / 24)}d`
+}
+
 function Logo() {
   return (
     <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-fg shadow-sm shadow-primary/20">
@@ -529,15 +543,22 @@ export default function App() {
                           key: 'nextcall', 
                           header: <SortHeader label="Lần chạy tới" sortKey="nextcall" />, 
                           cell: (row) => {
-                            const isLate = new Date(row.nextcall + 'Z') < now
+                            const delay = getDelayText(row.nextcall)
                             return (
                               <div className="flex flex-col py-1">
-                                <span className={cn("text-sm whitespace-nowrap", isLate && "text-danger font-medium")}>
+                                <span className={cn("text-sm whitespace-nowrap", delay && "text-danger font-medium")}>
                                   {formatDateTime(row.nextcall).split(' ')[0]}
                                 </span>
-                                <span className="text-[10px] text-fg-muted whitespace-nowrap">
-                                  {formatDateTime(row.nextcall).split(' ')[1]}
-                                </span>
+                                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                  <span className="text-[10px] text-fg-muted">
+                                    {formatDateTime(row.nextcall).split(' ')[1]}
+                                  </span>
+                                  {delay && (
+                                    <span className="text-[10px] font-bold text-danger bg-danger/10 px-1 rounded-sm uppercase tracking-tighter">
+                                      {delay}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             )
                           }
