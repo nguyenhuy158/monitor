@@ -6,6 +6,7 @@ import { getCrons } from "./odoo";
 export interface Env {
   SSO_ISSUER: string;
   ALERT_EMAIL: string;
+  MAILER_KEY?: string;
   MAILER: { fetch: (req: Request) => Promise<Response> };
   ASSETS: { fetch: (req: Request) => Promise<Response> };
   DB: D1Database;
@@ -157,9 +158,14 @@ app.post("/api/configs/:id/test-email", async (c) => {
   if (!config) return c.json({ error: "Not found" }, 404);
 
   try {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (c.env.MAILER_KEY) {
+      headers["Authorization"] = `Bearer ${c.env.MAILER_KEY}`;
+    }
+
     const res = await c.env.MAILER.fetch(new Request("https://mailer/send", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({
         to: email,
         subject: `[Odoo Monitor] Test email - ${config.name}`,
@@ -233,9 +239,14 @@ export default {
           const body = `Odoo: ${config.name}\nCó ${delayedCrons.length} cron bị trễ:\n` + 
             delayedCrons.map((c: any) => `- ${c.name} (${c.nextcall})`).join("\n");
 
+          const headers: Record<string, string> = { "Content-Type": "application/json" };
+          if (env.MAILER_KEY) {
+            headers["Authorization"] = `Bearer ${env.MAILER_KEY}`;
+          }
+
           await env.MAILER.fetch(new Request("https://mailer/send", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers,
             body: JSON.stringify({
               to: config.user_email,
               subject: `[Odoo Monitor] Cảnh báo Cron - ${config.name}`,
