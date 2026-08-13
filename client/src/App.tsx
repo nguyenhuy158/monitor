@@ -1,5 +1,5 @@
-import { useEffect, useState, useMemo } from 'react'
-import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
+import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react'
 import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast, Pagination } from '@ui'
 
 const ENV_OPTIONS = [
@@ -55,19 +55,39 @@ export default function App() {
     if (user) fetchConfigs()
   }, [user])
 
-  useEffect(() => {
-    if (selectedConfigId) {
-      setLoading(true)
-      fetch(`/api/crons?config_id=${selectedConfigId}`)
-        .then(res => res.json())
-        .then(data => {
-          setCrons(data.crons || [])
+  const fetchCrons = useCallback((configId: string, silent = false) => {
+    if (!configId) return
+    if (!silent) setLoading(true)
+    fetch(`/api/crons?config_id=${configId}`)
+      .then(res => res.json())
+      .then(data => {
+        setCrons(data.crons || [])
+        if (!silent) {
           setLoading(false)
           setCurrentPage(1)
-        })
-        .catch(() => setLoading(false))
+        }
+      })
+      .catch(() => {
+        if (!silent) setLoading(false)
+      })
+  }, [])
+
+  useEffect(() => {
+    if (selectedConfigId) {
+      fetchCrons(selectedConfigId)
     }
-  }, [selectedConfigId])
+  }, [selectedConfigId, fetchCrons])
+
+  // Auto reload mỗi 30s
+  useEffect(() => {
+    if (!selectedConfigId || !user) return
+    
+    const interval = setInterval(() => {
+      fetchCrons(selectedConfigId, true)
+    }, 30000)
+
+    return () => clearInterval(interval)
+  }, [selectedConfigId, user, fetchCrons])
 
   const handleAddConfig = () => {
     const isEdit = modalMode === 'edit'
@@ -233,6 +253,15 @@ export default function App() {
             {selectedConfig && (
               <>
                 <Badge tone={ENV_TONE[selectedConfig.env] || 'neutral'}>{selectedConfig.env}</Badge>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label="Reload data"
+                  loading={loading}
+                  onClick={() => fetchCrons(selectedConfigId)}
+                >
+                  <RefreshCw className="size-4" />
+                </Button>
                 <Button
                   variant="outline"
                   size="icon"
