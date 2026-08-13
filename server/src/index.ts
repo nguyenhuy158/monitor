@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { getCrons } from "./odoo";
+import { BUILD_INFO } from "../../shared/build-info";
 
 export interface Env {
   SSO_ISSUER: string;
@@ -37,6 +38,8 @@ const getAuthUser = async (c: any) => {
     return null;
   }
 };
+
+app.get("/api/version", (c) => c.json(BUILD_INFO));
 
 app.get("/api/me", async (c) => {
   const email = await getAuthUser(c);

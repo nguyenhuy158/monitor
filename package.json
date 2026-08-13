@@ -5,9 +5,9 @@
   "type": "module",
   "packageManager": "pnpm@11.18.0",
   "scripts": {
-    "dev": "wrangler dev",
-    "dev:client": "vite",
-    "build": "vite build",
+    "dev": "node scripts/build-info.mjs && wrangler dev",
+    "dev:client": "node scripts/build-info.mjs && vite",
+    "build": "node scripts/build-info.mjs && vite build",
     "deploy": "wrangler deploy"
   },
   "dependencies": {
