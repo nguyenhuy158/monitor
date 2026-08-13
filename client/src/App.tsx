@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
-import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Search, X } from 'lucide-react'
-import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast, Pagination } from '@ui'
+import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Search, X, MoreVertical } from 'lucide-react'
+import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast, Pagination, Menu } from '@ui'
 
 const ENV_OPTIONS = [
   { value: 'dev', label: 'Dev' },
@@ -278,31 +278,39 @@ export default function App() {
                 >
                   <RefreshCw className="size-4" />
                 </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  aria-label="Edit instance"
-                  onClick={openEditModal}
-                >
-                  <Edit2 className="size-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  aria-label="Duplicate instance"
-                  onClick={handleDuplicateConfig}
-                >
-                  <Copy className="size-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  aria-label="Test send email"
-                  loading={isSendingEmail}
-                  onClick={handleTestEmail}
-                >
-                  <Mail className="size-4" />
-                </Button>
+                
+                <Menu
+                  align="right"
+                  trigger={({ onClick, 'aria-expanded': expanded }) => (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={onClick}
+                      aria-expanded={expanded}
+                      aria-label="More actions"
+                    >
+                      <MoreVertical className="size-4" />
+                    </Button>
+                  )}
+                  items={[
+                    {
+                      label: 'Gửi email test',
+                      icon: <Mail className="size-4" />,
+                      onSelect: handleTestEmail,
+                      disabled: isSendingEmail
+                    },
+                    {
+                      label: 'Nhân bản',
+                      icon: <Copy className="size-4" />,
+                      onSelect: handleDuplicateConfig
+                    },
+                    {
+                      label: 'Chỉnh sửa',
+                      icon: <Edit2 className="size-4" />,
+                      onSelect: openEditModal
+                    }
+                  ]}
+                />
               </>
             )}
           </div>
