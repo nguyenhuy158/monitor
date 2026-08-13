@@ -340,6 +340,7 @@ export default function App() {
     description: config.env,
   })), [configs])
   const now = new Date()
+  const delayed = (crons || []).filter(c => new Date(c.nextcall + 'Z') < now)
 
   const sortedCrons = useMemo(() => {
     if (!Array.isArray(crons)) return []

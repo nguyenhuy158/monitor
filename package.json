@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "node scripts/build-info.mjs && wrangler dev",
     "dev:client": "node scripts/build-info.mjs && vite",
+    "check": "tsc --noEmit",
     "build": "node scripts/build-info.mjs && vite build",
     "deploy": "wrangler deploy"
   },
