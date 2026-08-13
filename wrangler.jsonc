@@ -17,8 +17,5 @@
     "ALERT_EMAIL": "ntqhuy2k2@gmail.com"
   },
   "services": [{ "binding": "MAILER", "service": "mailer" }],
-  "triggers": {
-    "crons": ["0 * * * *"]
-  },
   "routes": [{ "pattern": "moni.huyab.click", "custom_domain": true }]
 }
