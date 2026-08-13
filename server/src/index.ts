@@ -76,7 +76,7 @@ app.put("/api/settings", async (c) => {
 app.get("/api/configs", async (c) => {
   const email = await getAuthUser(c);
   if (!email) return c.json({ error: "Unauthorized" }, 401);
-  const { results } = await c.env.DB.prepare("SELECT * FROM monitor_configs WHERE user_email = ?").bind(email).all();
+  const { results } = await c.env.DB.prepare("SELECT * FROM monitor_configs WHERE user_email = ? ORDER BY sort_order ASC, id ASC").bind(email).all();
   return c.json(results);
 });
 
@@ -105,6 +105,21 @@ app.put("/api/configs/:id", async (c) => {
   ).bind(body.name, body.url, body.db, body.username, body.password, env, id, email).run();
 
   if (!success) return c.json({ error: "Failed to update or not found" }, 404);
+  return c.json({ success: true });
+});
+
+app.post("/api/configs/reorder", async (c) => {
+  const email = await getAuthUser(c);
+  if (!email) return c.json({ error: "Unauthorized" }, 401);
+  const { ids } = await c.req.json();
+  
+  if (!Array.isArray(ids)) return c.json({ error: "Invalid IDs" }, 400);
+
+  const statements = ids.map((id, index) => 
+    c.env.DB.prepare("UPDATE monitor_configs SET sort_order = ? WHERE id = ? AND user_email = ?").bind(index, id, email)
+  );
+  
+  await c.env.DB.batch(statements);
   return c.json({ success: true });
 });
 

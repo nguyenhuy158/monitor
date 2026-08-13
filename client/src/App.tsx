@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
-import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Search, X, MoreVertical, LogOut, PackageOpen, LayoutDashboard, Settings, BellRing, BarChart3, Activity, Server, Clock } from 'lucide-react'
+import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Search, X, MoreVertical, LogOut, PackageOpen, LayoutDashboard, Settings, BellRing, BarChart3, Activity, Server, Clock, ChevronUp, ChevronDown, ListTree } from 'lucide-react'
 import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast, Pagination, Menu, Avatar, Skeleton, EmptyState, cn, Combobox, BottomNav, Switch } from '@ui'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
@@ -70,7 +70,7 @@ export default function App() {
   const [userSettings, setUserSettings] = useState({ alert_delay_minutes: 30 })
   const [isUpdatingSettings, setIsUpdatingSettings] = useState(false)
   
-  const [activeTab, setActiveTab] = useState<'stats' | 'dashboard' | 'settings'>('stats')
+  const [activeTab, setActiveTab] = useState<'stats' | 'dashboard' | 'configs' | 'settings'>('stats')
   const [allCronsData, setAllCronsData] = useState<Record<string, any[]>>({})
   const [loadingAllCrons, setLoadingAllCrons] = useState(false)
   
@@ -279,9 +279,8 @@ export default function App() {
     setIsModalOpen(true)
   }
 
-  const handleDuplicateConfig = () => {
-    if (!selectedConfigId) return
-    fetch(`/api/configs/${selectedConfigId}/duplicate`, { method: 'POST' }).then(res => {
+  const handleDuplicateConfig = (configId) => {
+    fetch(`/api/configs/${configId}/duplicate`, { method: 'POST' }).then(res => {
       if (res.ok) {
         toast.success('Đã nhân bản instance')
         fetchConfigs()
@@ -289,6 +288,23 @@ export default function App() {
         toast.error('Lỗi khi nhân bản')
       }
     }).catch(() => toast.error('Lỗi kết nối'))
+  }
+
+  const handleMoveConfig = (index: number, direction: 'up' | 'down') => {
+    const newConfigs = [...configs]
+    const targetIndex = direction === 'up' ? index - 1 : index + 1
+    
+    if (targetIndex < 0 || targetIndex >= newConfigs.length) return
+
+    const [movedItem] = newConfigs.splice(index, 1)
+    newConfigs.splice(targetIndex, 0, movedItem)
+    
+    setConfigs(newConfigs)
+    
+    fetch('/api/configs/reorder', {
+      method: 'POST',
+      body: JSON.stringify({ ids: newConfigs.map(c => c.id) })
+    }).catch(() => toast.error('Lỗi khi lưu thứ tự'))
   }
 
   const handleTestEmail = () => {
@@ -477,6 +493,14 @@ export default function App() {
                 Dashboard
               </Button>
               <Button 
+                variant={activeTab === 'configs' ? 'primary' : 'ghost'} 
+                size="sm" 
+                onClick={() => setActiveTab('configs')}
+                leftIcon={<ListTree size={16} />}
+              >
+                Instances
+              </Button>
+              <Button 
                 variant={activeTab === 'settings' ? 'primary' : 'ghost'} 
                 size="sm" 
                 onClick={() => setActiveTab('settings')}
@@ -559,39 +583,16 @@ export default function App() {
                       <RefreshCw className="size-3.5" />
                     </Button>
                     
-                    <Menu
-                      align="right"
-                      trigger={({ onClick, 'aria-expanded': expanded }) => (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={onClick}
-                          aria-expanded={expanded}
-                          aria-label="More actions"
-                          className="size-8"
-                        >
-                          <MoreVertical className="size-3.5" />
-                        </Button>
-                      )}
-                      items={[
-                        {
-                          label: 'Gửi email test',
-                          icon: <Mail className="size-4" />,
-                          onSelect: handleTestEmail,
-                          disabled: isSendingEmail
-                        },
-                        {
-                          label: 'Nhân bản',
-                          icon: <Copy className="size-4" />,
-                          onSelect: handleDuplicateConfig
-                        },
-                        {
-                          label: 'Chỉnh sửa',
-                          icon: <Edit2 className="size-4" />,
-                          onSelect: openEditModal
-                        }
-                      ]}
-                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      aria-label="Test send email"
+                      onClick={handleTestEmail}
+                      disabled={isSendingEmail}
+                      className="size-8"
+                    >
+                      <Mail className="size-3.5" />
+                    </Button>
                   </div>
                 )}
               </div>
@@ -845,6 +846,87 @@ export default function App() {
               </div>
             </div>
           </div>
+        ) : activeTab === 'configs' ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-fg uppercase tracking-wider">Danh sách Instance</h3>
+              <Button size="sm" leftIcon={<Plus size={16} />} onClick={openAddModal}>Thêm mới</Button>
+            </div>
+            
+            <div className="space-y-3">
+              {configs.map((config, index) => (
+                <Card key={config.id} className="p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="size-6" 
+                        disabled={index === 0}
+                        onClick={() => handleMoveConfig(index, 'up')}
+                      >
+                        <ChevronUp size={14} />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="size-6" 
+                        disabled={index === configs.length - 1}
+                        onClick={() => handleMoveConfig(index, 'down')}
+                      >
+                        <ChevronDown size={14} />
+                      </Button>
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-sm truncate">{config.name}</p>
+                        <Badge tone={ENV_TONE[config.env] || 'neutral'} size="sm">{config.env}</Badge>
+                      </div>
+                      <p className="text-[11px] text-fg-muted truncate mt-0.5">{config.url}</p>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="size-8"
+                        onClick={() => {
+                          setSelectedConfigId(String(config.id))
+                          openEditModal()
+                        }}
+                      >
+                        <Edit2 size={14} />
+                      </Button>
+                      <Menu
+                        align="right"
+                        trigger={({ onClick }) => (
+                          <Button variant="ghost" size="icon" className="size-8" onClick={onClick}>
+                            <MoreVertical size={14} />
+                          </Button>
+                        )}
+                        items={[
+                          {
+                            label: 'Nhân bản',
+                            icon: <Copy size={14} />,
+                            onSelect: () => handleDuplicateConfig(config.id)
+                          }
+                        ]}
+                      />
+                    </div>
+                  </div>
+                </Card>
+              ))}
+              
+              {configs.length === 0 && (
+                <EmptyState 
+                  title="Chưa có instance nào" 
+                  description="Hãy thêm instance Odoo đầu tiên để bắt đầu giám sát."
+                  action={<Button onClick={openAddModal}>Thêm Odoo Instance</Button>}
+                />
+              )}
+            </div>
+          </div>
         ) : (
           <Card className="space-y-6">
             <CardHeader 
@@ -896,6 +978,7 @@ export default function App() {
         items={[
           { id: 'stats', label: 'Stats', icon: BarChart3 },
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+          { id: 'configs', label: 'Instances', icon: ListTree },
           { id: 'settings', label: 'Settings', icon: Settings },
         ]}
       />
