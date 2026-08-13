@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Card, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select } from '@ui'
+import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select } from '@ui'
 
 export default function App() {
   const [configs, setConfigs] = useState([])
@@ -55,11 +55,11 @@ export default function App() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-bg p-4">
         <Card className="max-w-md w-full text-center space-y-6 py-12">
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">Odoo Monitor</h1>
-            <p className="text-gray-500">Giám sát Cron Job Odoo và cảnh báo tức thì</p>
+            <h1 className="text-3xl font-bold tracking-tight text-fg">Odoo Monitor</h1>
+            <p className="text-fg-muted">Giám sát Cron Job Odoo và cảnh báo tức thì</p>
           </div>
           <Button 
             size="lg" 
@@ -74,7 +74,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bg">
       <HeaderBar title="Odoo Monitor" />
       <main className="max-w-7xl mx-auto p-6 space-y-6">
         <div className="flex justify-between items-center">
@@ -93,10 +93,20 @@ export default function App() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card><Metric label="Active Crons" value={Array.isArray(crons) ? crons.length : 0} /></Card>
-          <Card><Metric label="Delayed" value={delayed.length} tone={delayed.length > 0 ? "critical" : "positive"} /></Card>
+          <Card>
+            <Metric
+              label="Delayed"
+              value={
+                <span className={delayed.length > 0 ? "text-danger" : "text-success"}>
+                  {delayed.length}
+                </span>
+              }
+            />
+          </Card>
         </div>
 
-        <Card header={<h2 className="text-lg font-semibold">Cron Jobs</h2>}>
+        <Card>
+          <CardHeader title="Cron Jobs" className="mb-4" />
           {loading ? (
             <div className="p-6 text-center text-fg-muted">Loading...</div>
           ) : (
@@ -108,27 +118,33 @@ export default function App() {
                 { key: 'name', header: 'Name', cell: (row) => row.name },
                 { key: 'nextcall', header: 'Next Call', cell: (row) => (
                   <div className="flex gap-2 items-center">
-                    {row.nextcall} {new Date(row.nextcall + 'Z') < now && <Badge tone="critical">Trễ</Badge>}
+                    {row.nextcall} {new Date(row.nextcall + 'Z') < now && <Badge tone="danger">Trễ</Badge>}
                   </div>
                 )},
-                { key: 'active', header: 'Status', cell: (row) => row.active ? <Badge tone="positive">Active</Badge> : <Badge /> }
+                { key: 'active', header: 'Status', cell: (row) => row.active ? <Badge tone="success">Active</Badge> : <Badge /> }
               ]}
             />
           )}
         </Card>
       </main>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add Odoo Instance">
-        <div className="space-y-4 p-4">
+      <Modal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Add Odoo Instance"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddConfig}>Save</Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
           <Field label="Instance Name"><Input value={newConfig.name} onChange={e => setNewConfig({...newConfig, name: e.target.value})} placeholder="My Odoo" /></Field>
           <Field label="URL"><Input value={newConfig.url} onChange={e => setNewConfig({...newConfig, url: e.target.value})} placeholder="https://odoo.com" /></Field>
           <Field label="Database"><Input value={newConfig.db} onChange={e => setNewConfig({...newConfig, db: e.target.value})} /></Field>
           <Field label="Username"><Input value={newConfig.username} onChange={e => setNewConfig({...newConfig, username: e.target.value})} /></Field>
           <Field label="Password"><Input type="password" value={newConfig.password} onChange={e => setNewConfig({...newConfig, password: e.target.value})} /></Field>
-          <div className="flex justify-end gap-2 mt-6">
-            <Button variant="neutral" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddConfig}>Save</Button>
-          </div>
         </div>
       </Modal>
     </div>
