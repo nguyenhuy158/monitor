@@ -334,6 +334,11 @@ export default function App() {
   }
 
   const selectedConfig = (configs || []).find(c => String(c.id) === String(selectedConfigId))
+  const instanceOptions = useMemo(() => (configs || []).map(config => ({
+    value: String(config.id),
+    label: config.name,
+    description: config.env,
+  })), [configs])
   const now = new Date()
 
   const sortedCrons = useMemo(() => {
