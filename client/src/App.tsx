@@ -50,6 +50,7 @@ export default function App() {
   const [user, setUser] = useState(null)
   const [loadingUser, setLoadingUser] = useState(true)
   const [isSendingEmail, setIsSendingEmail] = useState(false)
+  const [viewingCron, setViewingCron] = useState(null)
   
   const [currentPage, setCurrentPage] = useState(1)
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' | null }>({ key: 'nextcall', direction: 'asc' })
@@ -475,6 +476,8 @@ export default function App() {
                   className="border-0 rounded-none shadow-none"
                   rows={paginatedCrons}
                   rowKey={(row) => row.id ?? row.name}
+                  wrap
+                  onRowClick={(row) => setViewingCron(row)}
                   empty={
                     <EmptyState 
                       title="Không có cron nào" 
@@ -488,7 +491,7 @@ export default function App() {
                       key: 'name', 
                       header: <SortHeader label="Tên Cron" sortKey="name" />, 
                       cell: (row) => (
-                        <div className="max-w-[180px] sm:max-w-xs truncate font-medium">
+                        <div className="font-medium break-words py-1">
                           {row.name}
                         </div>
                       )
@@ -499,11 +502,11 @@ export default function App() {
                       cell: (row) => {
                         const isLate = new Date(row.nextcall + 'Z') < now
                         return (
-                          <div className="flex flex-col">
-                            <span className={cn("text-sm", isLate && "text-danger font-medium")}>
+                          <div className="flex flex-col py-1">
+                            <span className={cn("text-sm whitespace-nowrap", isLate && "text-danger font-medium")}>
                               {formatDateTime(row.nextcall).split(' ')[0]}
                             </span>
-                            <span className="text-[10px] text-fg-muted">
+                            <span className="text-[10px] text-fg-muted whitespace-nowrap">
                               {formatDateTime(row.nextcall).split(' ')[1]}
                             </span>
                           </div>
@@ -559,6 +562,44 @@ export default function App() {
             options={ENV_OPTIONS}
           />
         </div>
+      </Modal>
+
+      <Modal
+        open={!!viewingCron}
+        onClose={() => setViewingCron(null)}
+        title="Chi tiết Cron Job"
+        footer={<Button onClick={() => setViewingCron(null)}>Đóng</Button>}
+      >
+        {viewingCron && (
+          <div className="space-y-4">
+            <Field label="Tên Cron">
+              <div className="rounded-ui bg-surface-muted p-3 text-sm font-medium border border-border">
+                {viewingCron.name}
+              </div>
+            </Field>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Lần chạy tới">
+                <div className="text-sm">{formatDateTime(viewingCron.nextcall)}</div>
+              </Field>
+              <Field label="Trạng thái">
+                {viewingCron.active ? <Badge tone="success">Active</Badge> : <Badge />}
+              </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Số lần chạy (Number)">
+                <div className="text-sm">{viewingCron.numbercall}</div>
+              </Field>
+              <Field label="Định kỳ (Interval)">
+                <div className="text-sm">{viewingCron.interval_number} {viewingCron.interval_type}</div>
+              </Field>
+            </div>
+            {viewingCron.lastcall && (
+              <Field label="Lần chạy cuối">
+                <div className="text-sm">{formatDateTime(viewingCron.lastcall)}</div>
+              </Field>
+            )}
+          </div>
+        )}
       </Modal>
     </div>
   )

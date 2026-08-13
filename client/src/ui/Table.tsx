@@ -18,6 +18,8 @@ export type TableProps<TRow> = {
   rows: TRow[];
   rowKey: (row: TRow) => string;
   onRowClick?: (row: TRow) => void;
+  /** Cho phép xuống dòng nếu nội dung ô quá dài. */
+  wrap?: boolean;
   /** Hien khi rows rong. Thuong truyen <EmptyState />. */
   empty?: ReactNode;
   className?: string;
@@ -33,6 +35,7 @@ export function Table<TRow>({
   rows,
   rowKey,
   onRowClick,
+  wrap = false,
   empty,
   className,
 }: TableProps<TRow>) {
@@ -51,6 +54,7 @@ export function Table<TRow>({
                   "px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-fg-muted",
                   column.numeric || column.align === "right" ? "text-right" : "text-left",
                   column.hideOnMobile && "hidden sm:table-cell",
+                  !wrap && "whitespace-nowrap"
                 )}
               >
                 {column.header}
@@ -77,6 +81,7 @@ export function Table<TRow>({
                     column.numeric && "tabular",
                     column.numeric || column.align === "right" ? "text-right" : "text-left",
                     column.hideOnMobile && "hidden sm:table-cell",
+                    !wrap && "whitespace-nowrap"
                   )}
                 >
                   {column.cell(row)}
