@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
-import { Plus, Copy, Mail, Edit2 } from 'lucide-react'
-import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast } from '@ui'
+import { useEffect, useState, useMemo } from 'react'
+import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast, Pagination } from '@ui'
 
 const ENV_OPTIONS = [
   { value: 'dev', label: 'Dev' },
@@ -33,6 +33,10 @@ export default function App() {
   const [newConfig, setNewConfig] = useState({ name: '', url: '', db: '', username: '', password: '', env: 'prod' })
   const [user, setUser] = useState(null)
   const [isSendingEmail, setIsSendingEmail] = useState(false)
+  
+  const [currentPage, setCurrentPage] = useState(1)
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' | null }>({ key: 'nextcall', direction: 'asc' })
+  const PAGE_LIMIT = 5
 
   useEffect(() => {
     fetch('/api/me').then(res => res.json()).then(data => {
@@ -59,6 +63,7 @@ export default function App() {
         .then(data => {
           setCrons(data.crons || [])
           setLoading(false)
+          setCurrentPage(1)
         })
         .catch(() => setLoading(false))
     }
@@ -132,7 +137,62 @@ export default function App() {
 
   const selectedConfig = (configs || []).find(c => String(c.id) === String(selectedConfigId))
   const now = new Date()
+
+  const sortedCrons = useMemo(() => {
+    if (!Array.isArray(crons)) return []
+    const items = [...crons]
+    if (sortConfig.key && sortConfig.direction) {
+      items.sort((a, b) => {
+        let aValue = a[sortConfig.key]
+        let bValue = b[sortConfig.key]
+
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1
+        }
+        return 0
+      })
+    }
+    return items
+  }, [crons, sortConfig])
+
+  const paginatedCrons = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_LIMIT
+    return sortedCrons.slice(startIndex, startIndex + PAGE_LIMIT)
+  }, [sortedCrons, currentPage])
+
+  const pageCount = Math.ceil(sortedCrons.length / PAGE_LIMIT)
+
   const delayed = Array.isArray(crons) ? crons.filter(c => new Date(c.nextcall + 'Z') < now) : []
+
+  const toggleSort = (key: string) => {
+    setSortConfig(current => {
+      if (current.key === key) {
+        if (current.direction === 'asc') return { key, direction: 'desc' }
+        if (current.direction === 'desc') return { key, direction: null }
+        return { key, direction: 'asc' }
+      }
+      return { key, direction: 'asc' }
+    })
+    setCurrentPage(1)
+  }
+
+  const SortHeader = ({ label, sortKey }: { label: string, sortKey: string }) => {
+    const isSorted = sortConfig.key === sortKey
+    const Icon = !isSorted || !sortConfig.direction ? ArrowUpDown : sortConfig.direction === 'asc' ? ArrowUp : ArrowDown
+    
+    return (
+      <button 
+        className="flex items-center gap-1 hover:text-fg transition-colors"
+        onClick={() => toggleSort(sortKey)}
+      >
+        {label}
+        <Icon className="size-3" />
+      </button>
+    )
+  }
 
   if (!user) {
     return (
@@ -229,20 +289,43 @@ export default function App() {
           {loading ? (
             <div className="p-6 text-center text-fg-muted">Loading...</div>
           ) : (
-            <Table
-              rows={Array.isArray(crons) ? crons : []}
-              rowKey={(row) => row.id ?? row.name}
-              empty={<div className="p-6 text-center text-fg-muted">Không có cron nào</div>}
-              columns={[
-                { key: 'name', header: 'Name', cell: (row) => row.name },
-                { key: 'nextcall', header: 'Next Call', cell: (row) => (
-                  <div className="flex gap-2 items-center">
-                    {formatDateTime(row.nextcall)} {new Date(row.nextcall + 'Z') < now && <Badge tone="danger">Trễ</Badge>}
-                  </div>
-                )},
-                { key: 'active', header: 'Status', hideOnMobile: true, cell: (row) => row.active ? <Badge tone="success">Active</Badge> : <Badge /> }
-              ]}
-            />
+            <div className="space-y-4">
+              <Table
+                rows={paginatedCrons}
+                rowKey={(row) => row.id ?? row.name}
+                empty={<div className="p-6 text-center text-fg-muted">Không có cron nào</div>}
+                columns={[
+                  { 
+                    key: 'name', 
+                    header: <SortHeader label="Name" sortKey="name" />, 
+                    cell: (row) => row.name 
+                  },
+                  { 
+                    key: 'nextcall', 
+                    header: <SortHeader label="Next Call" sortKey="nextcall" />, 
+                    cell: (row) => (
+                      <div className="flex gap-2 items-center">
+                        {formatDateTime(row.nextcall)} {new Date(row.nextcall + 'Z') < now && <Badge tone="danger">Trễ</Badge>}
+                      </div>
+                    )
+                  },
+                  { 
+                    key: 'active', 
+                    header: <SortHeader label="Status" sortKey="active" />, 
+                    hideOnMobile: true, 
+                    cell: (row) => row.active ? <Badge tone="success">Active</Badge> : <Badge /> 
+                  }
+                ]}
+              />
+              {pageCount > 1 && (
+                <Pagination 
+                  page={currentPage} 
+                  pageCount={pageCount} 
+                  onChange={setCurrentPage} 
+                  className="py-2"
+                />
+              )}
+            </div>
           )}
         </Card>
       </main>
