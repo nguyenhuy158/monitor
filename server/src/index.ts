@@ -41,7 +41,30 @@ const getAuthUser = async (c: any) => {
 app.get("/api/me", async (c) => {
   const email = await getAuthUser(c);
   if (!email) return c.json({ authenticated: false }, 401);
-  return c.json({ email, authenticated: true });
+  
+  // Lấy hoặc tạo settings mặc định
+  let settings: any = await c.env.DB.prepare("SELECT * FROM monitor_user_settings WHERE user_email = ?").bind(email).first();
+  if (!settings) {
+    await c.env.DB.prepare("INSERT INTO monitor_user_settings (user_email) VALUES (?)").bind(email).run();
+    settings = { alert_delay_minutes: 30 };
+  }
+
+  return c.json({ email, authenticated: true, settings });
+});
+
+app.put("/api/settings", async (c) => {
+  const email = await getAuthUser(c);
+  if (!email) return c.json({ error: "Unauthorized" }, 401);
+  const body = await c.req.json();
+  const delay = parseInt(body.alert_delay_minutes);
+  
+  if (isNaN(delay) || delay < 0) return c.json({ error: "Invalid delay" }, 400);
+
+  await c.env.DB.prepare(
+    "INSERT INTO monitor_user_settings (user_email, alert_delay_minutes, updated_at) VALUES (?, ?, (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))) ON CONFLICT(user_email) DO UPDATE SET alert_delay_minutes = excluded.alert_delay_minutes, updated_at = excluded.updated_at"
+  ).bind(email, delay).run();
+
+  return c.json({ success: true });
 });
 
 // API Quản lý Odoo Configs
@@ -158,11 +181,23 @@ export default {
     // Check toàn bộ config của tất cả user
     const { results: configs } = await env.DB.prepare("SELECT * FROM monitor_configs WHERE alert_enabled = 1").all();
     
+    // Lấy toàn bộ settings của tất cả user để tránh query trong loop
+    const { results: allSettings } = await env.DB.prepare("SELECT * FROM monitor_user_settings").all();
+    const settingsMap = new Map((allSettings as any[]).map(s => [s.user_email, s.alert_delay_minutes]));
+
     for (const config of (configs as any[])) {
       try {
         const crons = await getCrons(config.url, config.db, config.username, config.password);
         const now = new Date();
-        const delayedCrons = crons.filter((cron: any) => new Date(cron.nextcall + "Z") < now);
+        
+        // Lấy ngưỡng trễ của user, mặc định 30p
+        const delayLimit = settingsMap.get(config.user_email) ?? 30;
+        
+        const delayedCrons = crons.filter((cron: any) => {
+          const nextCall = new Date(cron.nextcall + "Z");
+          const diffMins = (now.getTime() - nextCall.getTime()) / 60000;
+          return diffMins >= delayLimit;
+        });
 
         if (delayedCrons.length > 0) {
           const body = `Odoo: ${config.name}\nCó ${delayedCrons.length} cron bị trễ:\n` + 

@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
-import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Search, X, MoreVertical, LogOut, PackageOpen, LayoutDashboard, Settings } from 'lucide-react'
-import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast, Pagination, Menu, Avatar, Skeleton, EmptyState, cn, Combobox, BottomNav } from '@ui'
+import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Search, X, MoreVertical, LogOut, PackageOpen, LayoutDashboard, Settings, BellRing } from 'lucide-react'
+import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast, Pagination, Menu, Avatar, Skeleton, EmptyState, cn, Combobox, BottomNav, Switch } from '@ui'
 
 const ENV_OPTIONS = [
   { value: 'dev', label: 'Dev' },
@@ -66,6 +66,9 @@ export default function App() {
   const [isSendingEmail, setIsSendingEmail] = useState(false)
   const [viewingCron, setViewingCron] = useState(null)
   
+  const [userSettings, setUserSettings] = useState({ alert_delay_minutes: 30 })
+  const [isUpdatingSettings, setIsUpdatingSettings] = useState(false)
+  
   const [activeTab, setActiveTab] = useState<'dashboard' | 'settings'>('dashboard')
   
   const [currentPage, setCurrentPage] = useState(1)
@@ -78,10 +81,31 @@ export default function App() {
     fetch('/api/me')
       .then(res => res.json())
       .then(data => {
-        if (data.authenticated) setUser(data)
+        if (data.authenticated) {
+          setUser(data)
+          if (data.settings) setUserSettings(data.settings)
+        }
       })
       .finally(() => setLoadingUser(false))
   }, [])
+
+  const updateSettings = (newSettings) => {
+    setIsUpdatingSettings(true)
+    fetch('/api/settings', {
+      method: 'PUT',
+      body: JSON.stringify(newSettings)
+    })
+      .then(res => {
+        if (res.ok) {
+          setUserSettings(newSettings)
+          toast.success('Đã lưu cài đặt')
+        } else {
+          toast.error('Lỗi khi lưu cài đặt')
+        }
+      })
+      .catch(() => toast.error('Lỗi kết nối'))
+      .finally(() => setIsUpdatingSettings(false))
+  }
 
   const fetchConfigs = () => {
     setLoadingConfigs(true)
@@ -587,11 +611,45 @@ export default function App() {
             </Card>
           </>
         ) : (
-          <Card>
-            <CardHeader title="Cài đặt" description="Quản lý thông báo và cấu hình chung" />
-            <div className="py-20 text-center text-fg-muted">
-              <Settings size={48} className="mx-auto opacity-10 mb-4" />
-              <p>Tính năng cài đặt đang được phát triển.</p>
+          <Card className="space-y-6">
+            <CardHeader 
+              title="Cài đặt thông báo" 
+              description="Tùy chỉnh ngưỡng thời gian cảnh báo qua email"
+              action={<BellRing className="size-5 text-primary opacity-50" />}
+            />
+            
+            <div className="space-y-6 py-4">
+              <Field 
+                label="Ngưỡng trễ cảnh báo (phút)" 
+                description={`Hệ thống sẽ gửi mail khi có ít nhất 1 cron trễ từ ${userSettings.alert_delay_minutes} phút trở lên.`}
+              >
+                <div className="flex gap-3">
+                  <Input 
+                    type="number" 
+                    min="1"
+                    value={userSettings.alert_delay_minutes}
+                    onChange={(e) => setUserSettings({ ...userSettings, alert_delay_minutes: parseInt(e.target.value) || 0 })}
+                    className="flex-1"
+                  />
+                  <Button 
+                    loading={isUpdatingSettings}
+                    onClick={() => updateSettings(userSettings)}
+                  >
+                    Lưu
+                  </Button>
+                </div>
+              </Field>
+
+              <div className="rounded-ui bg-surface-muted p-4 border border-border space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-fg-muted">Thông tin tài khoản</h4>
+                <div className="flex items-center gap-3">
+                  <Avatar src={`https://www.gravatar.com/avatar/${btoa(user.email)}?d=mp`} size="sm" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{user.email}</p>
+                    <p className="text-[11px] text-fg-muted">Tài khoản SSO huyab auth</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </Card>
         )}
