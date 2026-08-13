@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
-import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Search, X, MoreVertical, LogOut, PackageOpen, LayoutDashboard, Settings, BellRing } from 'lucide-react'
+import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Search, X, MoreVertical, LogOut, PackageOpen, LayoutDashboard, Settings, BellRing, BarChart3 } from 'lucide-react'
 import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast, Pagination, Menu, Avatar, Skeleton, EmptyState, cn, Combobox, BottomNav, Switch } from '@ui'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 const ENV_OPTIONS = [
   { value: 'dev', label: 'Dev' },
@@ -69,7 +70,9 @@ export default function App() {
   const [userSettings, setUserSettings] = useState({ alert_delay_minutes: 30 })
   const [isUpdatingSettings, setIsUpdatingSettings] = useState(false)
   
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'settings'>('dashboard')
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'stats' | 'settings'>('dashboard')
+  const [allCronsData, setAllCronsData] = useState<Record<string, any[]>>({})
+  const [loadingAllCrons, setLoadingAllCrons] = useState(false)
   
   const [currentPage, setCurrentPage] = useState(1)
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' | null }>({ key: 'nextcall', direction: 'asc' })
@@ -155,6 +158,58 @@ export default function App() {
 
     return () => clearInterval(interval)
   }, [selectedConfigId, user, fetchCrons])
+
+  const fetchAllCrons = useCallback(async () => {
+    if (configs.length === 0) return
+    setLoadingAllCrons(true)
+    const results: Record<string, any[]> = {}
+    
+    try {
+      await Promise.all(configs.map(async (config) => {
+        const res = await fetch(`/api/crons?config_id=${config.id}`)
+        const data = await res.json()
+        results[config.id] = data.crons || []
+      }))
+      setAllCronsData(results)
+    } catch (e) {
+      console.error("Failed to fetch all crons:", e)
+    } finally {
+      setLoadingAllCrons(false)
+    }
+  }, [configs])
+
+  useEffect(() => {
+    if (activeTab === 'stats' && Object.keys(allCronsData).length === 0) {
+      fetchAllCrons()
+    }
+  }, [activeTab, allCronsData, fetchAllCrons])
+
+  const statsData = useMemo(() => {
+    const now = new Date()
+    const envStats = {
+      prod: { delayed: 0, total: 0 },
+      preprod: { delayed: 0, total: 0 },
+      dev: { delayed: 0, total: 0 }
+    }
+
+    configs.forEach(config => {
+      const crons = allCronsData[config.id] || []
+      const env = (config.env || 'prod') as keyof typeof envStats
+      
+      const delayedCount = crons.filter(c => new Date(c.nextcall + 'Z') < now).length
+      
+      if (envStats[env]) {
+        envStats[env].delayed += delayedCount
+        envStats[env].total += crons.length
+      }
+    })
+
+    return [
+      { name: 'Production', delayed: envStats.prod.delayed, total: envStats.prod.total, color: 'var(--ui-danger)' },
+      { name: 'Preprod', delayed: envStats.preprod.delayed, total: envStats.preprod.total, color: 'var(--ui-warning)' },
+      { name: 'Dev', delayed: envStats.dev.delayed, total: envStats.dev.total, color: 'var(--ui-fg-muted)' }
+    ]
+  }, [configs, allCronsData])
 
   const handleAddConfig = () => {
     const isEdit = modalMode === 'edit'
@@ -383,6 +438,14 @@ export default function App() {
                 leftIcon={<LayoutDashboard size={16} />}
               >
                 Dashboard
+              </Button>
+              <Button 
+                variant={activeTab === 'stats' ? 'primary' : 'ghost'} 
+                size="sm" 
+                onClick={() => setActiveTab('stats')}
+                leftIcon={<BarChart3 size={16} />}
+              >
+                Stats
               </Button>
               <Button 
                 variant={activeTab === 'settings' ? 'primary' : 'ghost'} 
@@ -641,6 +704,84 @@ export default function App() {
               </div>
             </Card>
           </>
+        ) : activeTab === 'stats' ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {statsData.map(stat => (
+                <Card key={stat.name} className="flex flex-col items-center justify-center py-6">
+                  <p className="text-xs font-bold uppercase tracking-widest text-fg-muted mb-1">{stat.name}</p>
+                  <p className={cn("text-3xl font-black", stat.delayed > 0 ? "text-danger" : "text-success")}>
+                    {loadingAllCrons ? "..." : stat.delayed}
+                  </p>
+                  <p className="text-[10px] text-fg-muted mt-1 italic">trễ / {loadingAllCrons ? "..." : stat.total} tổng</p>
+                </Card>
+              ))}
+            </div>
+
+            <Card className="p-6">
+              <CardHeader 
+                title="Thống kê Cron trễ theo môi trường" 
+                description="Biểu đồ so sánh số lượng cron bị delay giữa các env"
+                action={
+                  <Button variant="ghost" size="icon" onClick={fetchAllCrons} loading={loadingAllCrons}>
+                    <RefreshCw className="size-4" />
+                  </Button>
+                }
+              />
+              <div className="h-72 w-full mt-8">
+                {loadingAllCrons ? (
+                  <div className="h-full w-full flex items-center justify-center">
+                    <Skeleton className="h-full w-full rounded-ui" />
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={statsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--ui-border)" opacity={0.5} />
+                      <XAxis 
+                        dataKey="name" 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: 'var(--ui-fg-muted)', fontSize: 12 }}
+                      />
+                      <YAxis 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: 'var(--ui-fg-muted)', fontSize: 12 }}
+                      />
+                      <Tooltip 
+                        cursor={{ fill: 'var(--ui-surface-muted)', opacity: 0.4 }}
+                        contentStyle={{ 
+                          backgroundColor: 'var(--ui-surface)', 
+                          borderRadius: 'var(--ui-radius)', 
+                          border: '1px solid var(--ui-border)',
+                          boxShadow: 'var(--ui-shadow-lg)'
+                        }}
+                      />
+                      <Bar dataKey="delayed" radius={[4, 4, 0, 0]} barSize={40}>
+                        {statsData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </Card>
+
+            <div className="rounded-ui bg-primary-soft p-4 border border-primary/10 flex items-start gap-3">
+              <div className="size-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0 mt-0.5">
+                <BarChart3 className="size-4 text-primary" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-primary">Phân tích nhanh</h4>
+                <p className="text-xs text-primary/80 leading-relaxed">
+                  {statsData.find(s => s.name === 'Production')?.delayed! > 0 
+                    ? "Cảnh báo: Đang có cron bị trễ trên Production. Hãy kiểm tra ngay lập tức để tránh gián đoạn dịch vụ."
+                    : "Hệ thống hoạt động ổn định. Không có cron nào bị trễ trên Production."}
+                </p>
+              </div>
+            </div>
+          </div>
         ) : (
           <Card className="space-y-6">
             <CardHeader 
@@ -691,6 +832,7 @@ export default function App() {
         onChange={(id) => setActiveTab(id as any)}
         items={[
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+          { id: 'stats', label: 'Stats', icon: BarChart3 },
           { id: 'settings', label: 'Settings', icon: Settings },
         ]}
       />

@@ -42,14 +42,19 @@ app.get("/api/me", async (c) => {
   const email = await getAuthUser(c);
   if (!email) return c.json({ authenticated: false }, 401);
   
-  // Lấy hoặc tạo settings mặc định
-  let settings: any = await c.env.DB.prepare("SELECT * FROM monitor_user_settings WHERE user_email = ?").bind(email).first();
-  if (!settings) {
-    await c.env.DB.prepare("INSERT INTO monitor_user_settings (user_email) VALUES (?)").bind(email).run();
-    settings = { alert_delay_minutes: 30 };
+  try {
+    // Lấy hoặc tạo settings mặc định
+    let settings: any = await c.env.DB.prepare("SELECT * FROM monitor_user_settings WHERE user_email = ?").bind(email).first();
+    if (!settings) {
+      await c.env.DB.prepare("INSERT INTO monitor_user_settings (user_email) VALUES (?)").bind(email).run();
+      settings = { alert_delay_minutes: 30 };
+    }
+    return c.json({ email, authenticated: true, settings });
+  } catch (e) {
+    console.error("Failed to get/create settings:", e);
+    // Vẫn cho login dù lỗi settings
+    return c.json({ email, authenticated: true, settings: { alert_delay_minutes: 30 } });
   }
-
-  return c.json({ email, authenticated: true, settings });
 });
 
 app.put("/api/settings", async (c) => {
