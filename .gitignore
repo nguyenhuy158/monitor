@@ -27,3 +27,6 @@ pnpm-debug.log*
 # Stray tool template dirs
 {{pkgetc}}/
 {{HOMEBREW_PREFIX}}/
+
+# E2E
+e2e-failure.png
