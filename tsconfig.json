@@ -1,17 +1,10 @@
 {
+  "extends": "@huyab/config/tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "types": ["@cloudflare/workers-types", "vite/client"],
-    "strict": true,
-    "noEmit": true,
-    "skipLibCheck": true,
-    "isolatedModules": true,
     "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./client/src/*"],

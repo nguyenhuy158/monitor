@@ -29,6 +29,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
     "@cloudflare/workers-types": "^4.20241230.0",
+    "@huyab/config": "github:nguyenhuy158/kit#v0.1.0&path:packages/config",
     "@huyab/e2e": "github:nguyenhuy158/kit#v0.1.0&path:packages/e2e",
     "@tailwindcss/vite": "^4.0.0",
     "@types/react": "^19.0.0",
