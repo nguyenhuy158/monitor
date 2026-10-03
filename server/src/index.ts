@@ -1,6 +1,6 @@
-import { Hono, type MiddlewareHandler } from "hono";
+import { SSO_COOKIE, verifySsoToken } from "@huyab/sso";
+import { type Context, Hono, type MiddlewareHandler } from "hono";
 import { getCookie } from "hono/cookie";
-import { createRemoteJWKSet, jwtVerify } from "jose";
 import { getCrons } from "./odoo";
 
 export interface Env {
@@ -15,36 +15,20 @@ type AppEnv = { Bindings: Env; Variables: { email: string } };
 
 const app = new Hono<AppEnv>();
 
-// SSO Configuration
-const SSO_COOKIE = "huyab_sso";
-let _jwks: any = null;
-
-const getJWKS = (issuer: string) => {
-  if (!_jwks) _jwks = createRemoteJWKSet(new URL(`${issuer}/.well-known/jwks.json`));
-  return _jwks;
-};
-
-// Middleware check auth & lấy user email
-const getAuthUser = async (c: any) => {
+// Chi doc cookie `huyab_sso` (khong nhan Bearer), nen khong dung requireUser
+// cua @huyab/sso/hono.
+const getAuthUser = async (c: Context<AppEnv>) => {
   const token = getCookie(c, SSO_COOKIE);
   if (!token) return null;
-
-  try {
-    const { payload } = await jwtVerify(token, getJWKS(c.env.SSO_ISSUER), {
-      issuer: c.env.SSO_ISSUER,
-    });
-    return payload.email;
-  } catch (e) {
-    console.error("JWT Verify failed:", e);
-    return null;
-  }
+  const claims = await verifySsoToken(token, c.env.SSO_ISSUER);
+  return claims?.email ?? null;
 };
 
 // Chan route khi chua dang nhap; route doc email qua c.get("email").
 const requireUser: MiddlewareHandler<AppEnv> = async (c, next) => {
   const email = await getAuthUser(c);
   if (!email) return c.json({ error: "Unauthorized" }, 401);
-  c.set("email", email as string);
+  c.set("email", email);
   await next();
 };
 

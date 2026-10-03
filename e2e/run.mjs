@@ -69,6 +69,7 @@ const jwk = { ...(await exportJWK(publicKey)), kid: "e2e", alg: "RS256", use: "s
 const token = await new SignJWT({ email: E2E_EMAIL })
   .setProtectedHeader({ alg: "RS256", kid: "e2e" })
   .setIssuer(FAKE_ORIGIN)
+  .setSubject("e2e-user")
   .setIssuedAt()
   .setExpirationTime("1h")
   .sign(privateKey);
