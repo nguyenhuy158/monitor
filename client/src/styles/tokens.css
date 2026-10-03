@@ -1,3 +1,17 @@
+/* ===========================================================================
+   ui-kit design tokens: nguon chuan cho moi project ca nhan dung React +
+   Tailwind v4. Project khac COPY file nay va import no thay cho
+   `@import "tailwindcss"` trong file CSS goc.
+
+   Hop dong:
+   - Ten bien `--ui-*` va ten utility trong `@theme inline` la co dinh. Them /
+     doi ten / xoa token thi sua o day truoc roi dong bo sang cac app.
+   - Project chi duoc doi GIA TRI trong `:root` (sang) va `.dark` (toi), vi du
+     hue thuong hieu. Dark mode theo class `.dark` tren <html>.
+   - Component chi dung class ngu nghia (bg-surface, text-fg-muted,
+     bg-primary...), khong hardcode mau palette (violet-600, stone-200...).
+=========================================================================== */
+
 @import "tailwindcss";
 
 /* Dark theo class .dark tren <html> de toggle thu cong duoc (khong phu thuoc OS). */
