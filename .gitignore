@@ -1,7 +1,14 @@
+# Dependencies & build output
 node_modules
 dist
 .wrangler
-.dev.vars
+.pnpm-store/
+coverage
+*.tsbuildinfo
+
+# Secrets / environment
+.dev.vars*
+.env*
 
 # IDEs
 .vscode
@@ -17,7 +24,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Environment
-.env
-.env.local
-.env.*.local
+# Stray tool template dirs
+{{pkgetc}}/
+{{HOMEBREW_PREFIX}}/
