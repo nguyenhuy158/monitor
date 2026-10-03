@@ -37,7 +37,10 @@ only for history.
 - `pnpm dev`: run the worker (API + assets + cron) with `wrangler dev`.
 - `pnpm dev:client`: run only the Vite dev server for the frontend.
 - `pnpm build`: create the Vite production build in `dist/`.
-- `pnpm check`: TypeScript typecheck (`tsc --noEmit`).
+- `pnpm check`: TypeScript typecheck (`tsc --noEmit`). `client/src/App.tsx`
+  is still largely untyped and has known type errors (including undefined
+  `instanceOptions` / `delayed` references), so CI runs it report-only;
+  do not add new errors elsewhere.
 - `pnpm lint`: run Biome lint + format checks (report only).
 - `pnpm format`: apply Biome formatting.
 

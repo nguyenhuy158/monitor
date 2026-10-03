@@ -3,11 +3,17 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "packageManager": "pnpm@11.18.0",
+  "packageManager": "pnpm@11.7.0",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "wrangler dev",
     "dev:client": "vite",
     "build": "vite build",
+    "check": "tsc --noEmit",
+    "lint": "biome check .",
+    "format": "biome format --write .",
     "deploy": "wrangler deploy"
   },
   "dependencies": {
@@ -19,6 +25,7 @@
     "recharts": "^3.10.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.15",
     "@cloudflare/workers-types": "^4.20241230.0",
     "@tailwindcss/vite": "^4.0.0",
     "@types/react": "^19.0.0",
