@@ -21,7 +21,6 @@
   "dependencies": {
     "@huyab/sso": "github:nguyenhuy158/kit#v0.1.0&path:packages/sso",
     "hono": "^4.6.14",
-    "jose": "^6.2.8",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -30,6 +29,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
     "@cloudflare/workers-types": "^4.20241230.0",
+    "@huyab/e2e": "github:nguyenhuy158/kit#v0.1.0&path:packages/e2e",
     "@tailwindcss/vite": "^4.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

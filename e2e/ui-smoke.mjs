@@ -11,21 +11,18 @@
 // `pnpm e2e:prod` = chi phan 1 tren https://alert.huyab.click.
 //
 // Bien moi truong:
-// - E2E_BASE_URL: mac dinh http://127.0.0.1:8795
+// - E2E_BASE_URL: mac dinh http://127.0.0.1:8787 (BASE cua @huyab/e2e)
 // - E2E_SSO_TOKEN, E2E_ODOO_URL: do e2e/run.mjs truyen vao
-// - PLAYWRIGHT_CHROMIUM_PATH: xem e2e/chromium.mjs
+// - PLAYWRIGHT_CHROMIUM_PATH: xem findChromium cua @huyab/e2e
+import { assert, assertLocalOnly, BASE, findChromium } from "@huyab/e2e";
 import { chromium } from "playwright-core";
-import { findChromium } from "./chromium.mjs";
 
-const BASE = process.env.E2E_BASE_URL || "http://127.0.0.1:8795";
 const SSO_TOKEN = process.env.E2E_SSO_TOKEN;
 const ODOO_URL = process.env.E2E_ODOO_URL;
 const WAIT = { timeout: 15000 };
-const IS_LOCAL = ["127.0.0.1", "localhost"].includes(new URL(BASE).hostname);
 
-if (SSO_TOKEN && !IS_LOCAL) {
-  throw new Error("E2E_SSO_TOKEN chi dung cho server local; e2e:prod phai chi doc");
-}
+// Phan 2 ghi D1: token chi duoc dung voi server local, e2e:prod phai chi doc.
+if (SSO_TOKEN) assertLocalOnly();
 
 let passed = 0;
 let failed = 0;
@@ -33,10 +30,6 @@ let failed = 0;
 function ok(name) {
   passed += 1;
   console.log(`PASS ${name}`);
-}
-
-function expect(condition, message) {
-  if (!condition) throw new Error(message);
 }
 
 const browser = await chromium.launch({ executablePath: findChromium() });
@@ -51,19 +44,19 @@ page.on("pageerror", (error) => {
 try {
   // ---- Phan 1: chi doc, an toan cho prod ----
   const home = await page.goto(BASE + "/");
-  expect(home?.ok(), `GET / tra ${home?.status()}`);
+  assert(home?.ok(), `GET / tra ${home?.status()}`);
   await page.getByRole("button", { name: "Tiếp tục với Google" }).waitFor(WAIT);
   ok("logged-out home renders the SSO login screen");
 
   const me = await page.request.get(BASE + "/api/me");
-  expect(me.status() === 401, `/api/me phai 401, got ${me.status()}`);
-  expect((await me.json()).authenticated === false, "/api/me phai authenticated:false");
+  assert(me.status() === 401, `/api/me phai 401, got ${me.status()}`);
+  assert((await me.json()).authenticated === false, "/api/me phai authenticated:false");
   const configs = await page.request.get(BASE + "/api/configs");
-  expect(configs.status() === 401, `/api/configs phai 401, got ${configs.status()}`);
+  assert(configs.status() === 401, `/api/configs phai 401, got ${configs.status()}`);
   ok("API rejects anonymous requests");
 
   const favicon = await page.request.get(BASE + "/favicon.svg");
-  expect(favicon.ok(), `GET /favicon.svg tra ${favicon.status()}`);
+  assert(favicon.ok(), `GET /favicon.svg tra ${favicon.status()}`);
   ok("static assets are served");
 
   // ---- Phan 2: chi local, co ghi D1 local ----
@@ -91,7 +84,7 @@ try {
     const delayedDialog = page.getByRole("dialog", { name: "Tất cả Cron đang trễ" });
     await delayedDialog.getByText("E2E late cron alpha").waitFor(WAIT);
     await delayedDialog.getByText("E2E late cron beta").waitFor(WAIT);
-    expect(
+    assert(
       (await delayedDialog.getByText("E2E on-time cron").count()) === 0,
       "cron dung gio khong duoc nam trong danh sach tre",
     );
@@ -125,7 +118,7 @@ try {
     await card.getByRole("button", { name: "Edit instance" }).click();
     const editDialog = page.getByRole("dialog", { name: "Edit Odoo Instance" });
     const editedName = await editDialog.getByLabel("Instance Name").inputValue();
-    expect(editedName === instanceName, `modal sua phai nap "${instanceName}", got "${editedName}"`);
+    assert(editedName === instanceName, `modal sua phai nap "${instanceName}", got "${editedName}"`);
     await editDialog.getByRole("button", { name: "Hủy" }).click();
     ok("edit modal loads the clicked instance");
 
@@ -135,11 +128,11 @@ try {
     await page.locator("main").getByRole("button", { name: "Lưu" }).click();
     await page.getByText("Đã lưu cài đặt").waitFor(WAIT);
     const saved = await page.evaluate(() => fetch("/api/me").then((response) => response.json()));
-    expect(saved.settings?.alert_delay_minutes === 45, `settings phai luu 45, got ${JSON.stringify(saved.settings)}`);
+    assert(saved.settings?.alert_delay_minutes === 45, `settings phai luu 45, got ${JSON.stringify(saved.settings)}`);
     ok("settings threshold saves");
   }
 
-  expect(pageErrors.length === 0, `co ${pageErrors.length} loi JS tren trang`);
+  assert(pageErrors.length === 0, `co ${pageErrors.length} loi JS tren trang`);
   ok("no uncaught page errors");
 } catch (error) {
   failed += 1;

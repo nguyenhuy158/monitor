@@ -14,9 +14,6 @@ importers:
       hono:
         specifier: ^4.6.14
         version: 4.13.1
-      jose:
-        specifier: ^6.2.8
-        version: 6.2.8
       lucide-react:
         specifier: ^0.468.0
         version: 0.468.0(react@19.2.8)
@@ -36,6 +33,9 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20241230.0
         version: 4.20260702.1
+      '@huyab/e2e':
+        specifier: github:nguyenhuy158/kit#v0.1.0&path:packages/e2e
+        version: https://codeload.github.com/nguyenhuy158/kit/tar.gz/dc6d7122964975a8283a12876dafa9ad8cff2c51#path:packages/e2e
       '@tailwindcss/vite':
         specifier: ^4.0.0
         version: 4.3.3(vite@6.4.3(jiti@2.7.0)(lightningcss@1.32.0))
@@ -570,6 +570,11 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@huyab/e2e@https://codeload.github.com/nguyenhuy158/kit/tar.gz/dc6d7122964975a8283a12876dafa9ad8cff2c51#path:packages/e2e':
+    resolution: {gitHosted: true, path: packages/e2e, tarball: https://codeload.github.com/nguyenhuy158/kit/tar.gz/dc6d7122964975a8283a12876dafa9ad8cff2c51}
+    version: 0.1.0
+    engines: {node: '>=22'}
 
   '@huyab/sso@https://codeload.github.com/nguyenhuy158/kit/tar.gz/dc6d7122964975a8283a12876dafa9ad8cff2c51#path:packages/sso':
     resolution: {gitHosted: true, path: packages/sso, tarball: https://codeload.github.com/nguyenhuy158/kit/tar.gz/dc6d7122964975a8283a12876dafa9ad8cff2c51}
@@ -1241,9 +1246,6 @@ packages:
   jiti@2.7.0:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
     hasBin: true
-
-  jose@6.2.8:
-    resolution: {integrity: sha512-Bsdjwm3Qsd/P0jR+BHDe3LytDfY7WBq2HmCCLIwuVRHMuEC9ae7/R474GIUdF1NgCyZjzVo/A9DOiOBtXq8ZoQ==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -1920,6 +1922,8 @@ snapshots:
   '@esbuild/win32-x64@0.27.3':
     optional: true
 
+  '@huyab/e2e@https://codeload.github.com/nguyenhuy158/kit/tar.gz/dc6d7122964975a8283a12876dafa9ad8cff2c51#path:packages/e2e': {}
+
   '@huyab/sso@https://codeload.github.com/nguyenhuy158/kit/tar.gz/dc6d7122964975a8283a12876dafa9ad8cff2c51#path:packages/sso(hono@4.13.1)':
     optionalDependencies:
       hono: 4.13.1
@@ -2454,8 +2458,6 @@ snapshots:
   internmap@2.0.3: {}
 
   jiti@2.7.0: {}
-
-  jose@6.2.8: {}
 
   js-tokens@4.0.0: {}
 
