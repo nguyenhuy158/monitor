@@ -36,6 +36,7 @@
     "@huyab/config": "github:nguyenhuy158/kit#v0.1.0&path:packages/config",
     "@huyab/e2e": "github:nguyenhuy158/kit#v0.1.0&path:packages/e2e",
     "@tailwindcss/vite": "^4.0.0",
+    "@types/node": "^22.20.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
