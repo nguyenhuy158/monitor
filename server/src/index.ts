@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, type MiddlewareHandler } from "hono";
 import { getCookie } from "hono/cookie";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { getCrons } from "./odoo";
@@ -11,7 +11,9 @@ export interface Env {
   DB: D1Database;
 }
 
-const app = new Hono<{ Bindings: Env }>();
+type AppEnv = { Bindings: Env; Variables: { email: string } };
+
+const app = new Hono<AppEnv>();
 
 // SSO Configuration
 const SSO_COOKIE = "huyab_sso";
@@ -38,6 +40,29 @@ const getAuthUser = async (c: any) => {
   }
 };
 
+// Chan route khi chua dang nhap; route doc email qua c.get("email").
+const requireUser: MiddlewareHandler<AppEnv> = async (c, next) => {
+  const email = await getAuthUser(c);
+  if (!email) return c.json({ error: "Unauthorized" }, 401);
+  c.set("email", email as string);
+  await next();
+};
+
+const findConfig = (db: D1Database, id: string, email: string) =>
+  db.prepare("SELECT * FROM monitor_configs WHERE id = ? AND user_email = ?").bind(id, email).first<any>();
+
+const sendMail = (env: Env, mail: { to: string; subject: string; text: string }) => {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (env.MAILER_KEY) {
+    headers["Authorization"] = `Bearer ${env.MAILER_KEY}`;
+  }
+  return env.MAILER.fetch(new Request("https://mailer/send", {
+    method: "POST",
+    headers,
+    body: JSON.stringify(mail),
+  }));
+};
+
 app.get("/api/me", async (c) => {
   const email = await getAuthUser(c);
   if (!email) return c.json({ authenticated: false }, 401);
@@ -57,9 +82,8 @@ app.get("/api/me", async (c) => {
   }
 });
 
-app.put("/api/settings", async (c) => {
-  const email = await getAuthUser(c);
-  if (!email) return c.json({ error: "Unauthorized" }, 401);
+app.put("/api/settings", requireUser, async (c) => {
+  const email = c.get("email");
   const body = await c.req.json();
   const delay = parseInt(body.alert_delay_minutes);
   
@@ -73,18 +97,16 @@ app.put("/api/settings", async (c) => {
 });
 
 // API Quản lý Odoo Configs
-app.get("/api/configs", async (c) => {
-  const email = await getAuthUser(c);
-  if (!email) return c.json({ error: "Unauthorized" }, 401);
+app.get("/api/configs", requireUser, async (c) => {
+  const email = c.get("email");
   const { results } = await c.env.DB.prepare("SELECT * FROM monitor_configs WHERE user_email = ? ORDER BY sort_order ASC, id ASC").bind(email).all();
   return c.json(results);
 });
 
 const ENVS = ["dev", "preprod", "prod"];
 
-app.post("/api/configs", async (c) => {
-  const email = await getAuthUser(c);
-  if (!email) return c.json({ error: "Unauthorized" }, 401);
+app.post("/api/configs", requireUser, async (c) => {
+  const email = c.get("email");
   const body = await c.req.json();
   const env = ENVS.includes(body.env) ? body.env : "prod";
   await c.env.DB.prepare(
@@ -93,9 +115,8 @@ app.post("/api/configs", async (c) => {
   return c.json({ success: true });
 });
 
-app.put("/api/configs/:id", async (c) => {
-  const email = await getAuthUser(c);
-  if (!email) return c.json({ error: "Unauthorized" }, 401);
+app.put("/api/configs/:id", requireUser, async (c) => {
+  const email = c.get("email");
   const id = c.req.param("id");
   const body = await c.req.json();
   const env = ENVS.includes(body.env) ? body.env : "prod";
@@ -108,9 +129,8 @@ app.put("/api/configs/:id", async (c) => {
   return c.json({ success: true });
 });
 
-app.post("/api/configs/reorder", async (c) => {
-  const email = await getAuthUser(c);
-  if (!email) return c.json({ error: "Unauthorized" }, 401);
+app.post("/api/configs/reorder", requireUser, async (c) => {
+  const email = c.get("email");
   const { ids } = await c.req.json();
   
   if (!Array.isArray(ids)) return c.json({ error: "Invalid IDs" }, 400);
@@ -123,13 +143,9 @@ app.post("/api/configs/reorder", async (c) => {
   return c.json({ success: true });
 });
 
-app.post("/api/configs/:id/duplicate", async (c) => {
-  const email = await getAuthUser(c);
-  if (!email) return c.json({ error: "Unauthorized" }, 401);
-  const id = c.req.param("id");
-  const original: any = await c.env.DB.prepare(
-    "SELECT * FROM monitor_configs WHERE id = ? AND user_email = ?"
-  ).bind(id, email).first();
+app.post("/api/configs/:id/duplicate", requireUser, async (c) => {
+  const email = c.get("email");
+  const original = await findConfig(c.env.DB, c.req.param("id"), email);
   if (!original) return c.json({ error: "Not found" }, 404);
 
   await c.env.DB.prepare(
@@ -147,30 +163,17 @@ app.post("/api/configs/:id/duplicate", async (c) => {
   return c.json({ success: true });
 });
 
-app.post("/api/configs/:id/test-email", async (c) => {
-  const email = await getAuthUser(c);
-  if (!email) return c.json({ error: "Unauthorized" }, 401);
-  const id = c.req.param("id");
-  const config: any = await c.env.DB.prepare(
-    "SELECT * FROM monitor_configs WHERE id = ? AND user_email = ?"
-  ).bind(id, email).first();
+app.post("/api/configs/:id/test-email", requireUser, async (c) => {
+  const email = c.get("email");
+  const config = await findConfig(c.env.DB, c.req.param("id"), email);
   if (!config) return c.json({ error: "Not found" }, 404);
 
   try {
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (c.env.MAILER_KEY) {
-      headers["Authorization"] = `Bearer ${c.env.MAILER_KEY}`;
-    }
-
-    const res = await c.env.MAILER.fetch(new Request("https://mailer/send", {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        to: email,
-        subject: `[Odoo Monitor] Test email - ${config.name}`,
-        text: `Đây là email test cho instance "${config.name}" (${config.env}). Nếu bạn nhận được email này, cấu hình gửi mail đang hoạt động bình thường.`,
-      }),
-    }));
+    const res = await sendMail(c.env, {
+      to: email,
+      subject: `[Odoo Monitor] Test email - ${config.name}`,
+      text: `Đây là email test cho instance "${config.name}" (${config.env}). Nếu bạn nhận được email này, cấu hình gửi mail đang hoạt động bình thường.`,
+    });
     
     if (!res.ok) {
       const errorText = await res.text();
@@ -184,15 +187,14 @@ app.post("/api/configs/:id/test-email", async (c) => {
   }
 });
 
-app.get("/api/crons", async (c) => {
-  const email = await getAuthUser(c);
-  if (!email) return c.json({ error: "Unauthorized" }, 401);
+app.get("/api/crons", requireUser, async (c) => {
+  const email = c.get("email");
   
   const configId = c.req.query("config_id");
   let config: any;
   
   if (configId) {
-    config = await c.env.DB.prepare("SELECT * FROM monitor_configs WHERE id = ? AND user_email = ?").bind(configId, email).first();
+    config = await findConfig(c.env.DB, configId, email);
   } else {
     config = await c.env.DB.prepare("SELECT * FROM monitor_configs WHERE user_email = ? ORDER BY id DESC LIMIT 1").bind(email).first();
   }
@@ -238,20 +240,11 @@ export default {
           const body = `Odoo: ${config.name}\nCó ${delayedCrons.length} cron bị trễ:\n` + 
             delayedCrons.map((c: any) => `- ${c.name} (${c.nextcall})`).join("\n");
 
-          const headers: Record<string, string> = { "Content-Type": "application/json" };
-          if (env.MAILER_KEY) {
-            headers["Authorization"] = `Bearer ${env.MAILER_KEY}`;
-          }
-
-          await env.MAILER.fetch(new Request("https://mailer/send", {
-            method: "POST",
-            headers,
-            body: JSON.stringify({
-              to: config.user_email,
-              subject: `[Odoo Monitor] Cảnh báo Cron - ${config.name}`,
-              text: body
-            })
-          }));
+          await sendMail(env, {
+            to: config.user_email,
+            subject: `[Odoo Monitor] Cảnh báo Cron - ${config.name}`,
+            text: body
+          });
         }
       } catch (e) {
         console.error(`Failed to check crons for ${config.name}:`, e);
