@@ -686,7 +686,7 @@ export default function App() {
                 {!isSearchVisible ? (
                   <>
                     <h3 className="text-sm font-semibold text-fg">Cron Jobs</h3>
-                    <Button variant="ghost" size="icon" onClick={toggleSearch} className="size-8">
+                    <Button variant="ghost" size="icon" onClick={toggleSearch} className="size-8" aria-label="Search crons">
                       <Search className="size-4 text-fg-muted" />
                     </Button>
                   </>
@@ -705,7 +705,7 @@ export default function App() {
                         }}
                       />
                     </div>
-                    <Button variant="ghost" size="icon" onClick={toggleSearch} className="size-8">
+                    <Button variant="ghost" size="icon" onClick={toggleSearch} className="size-8" aria-label="Close search">
                       <X className="size-4 text-fg-muted" />
                     </Button>
                   </div>
@@ -858,7 +858,7 @@ export default function App() {
                 title="Thống kê Cron trễ theo môi trường" 
                 description="Biểu đồ so sánh số lượng cron bị delay giữa các env"
                 action={
-                  <Button variant="ghost" size="icon" onClick={fetchAllCrons} loading={loadingAllCrons}>
+                  <Button variant="ghost" size="icon" onClick={fetchAllCrons} loading={loadingAllCrons} aria-label="Reload stats">
                     <RefreshCw className="size-4" />
                   </Button>
                 }
@@ -935,6 +935,7 @@ export default function App() {
                         className="size-6" 
                         disabled={index === 0}
                         onClick={() => handleMoveConfig(index, 'up')}
+                        aria-label="Move up"
                       >
                         <ChevronUp size={14} />
                       </Button>
@@ -944,6 +945,7 @@ export default function App() {
                         className="size-6" 
                         disabled={index === configs.length - 1}
                         onClick={() => handleMoveConfig(index, 'down')}
+                        aria-label="Move down"
                       >
                         <ChevronDown size={14} />
                       </Button>
@@ -963,13 +965,14 @@ export default function App() {
                         size="icon" 
                         className="size-8"
                         onClick={() => openEditModal(config)}
+                        aria-label="Edit instance"
                       >
                         <Edit2 size={14} />
                       </Button>
                       <Menu
                         align="right"
                         trigger={({ onClick }) => (
-                          <Button variant="ghost" size="icon" className="size-8" onClick={onClick}>
+                          <Button variant="ghost" size="icon" className="size-8" onClick={onClick} aria-label="More actions">
                             <MoreVertical size={14} />
                           </Button>
                         )}
