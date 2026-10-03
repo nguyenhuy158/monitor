@@ -8,10 +8,10 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "wrangler dev",
-    "dev:client": "vite",
-    "build": "vite build",
-    "check": "tsc --noEmit",
+    "dev": "node scripts/build-info.mjs && wrangler dev",
+    "dev:client": "node scripts/build-info.mjs && vite",
+    "build": "node scripts/build-info.mjs && vite build",
+    "check": "node scripts/build-info.mjs && tsc --noEmit",
     "lint": "biome check .",
     "format": "biome format --write .",
     "e2e": "node e2e/run.mjs",
@@ -19,12 +19,16 @@
     "deploy": "wrangler deploy"
   },
   "dependencies": {
+    "@dicebear/collection": "^9.4.2",
+    "@dicebear/core": "^9.4.3",
     "@huyab/sso": "github:nguyenhuy158/kit#v0.1.0&path:packages/sso",
+    "date-fns": "^4.4.0",
     "hono": "^4.6.14",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "recharts": "^3.10.1"
+    "recharts": "^3.10.1",
+    "sonner": "^2.0.8"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",

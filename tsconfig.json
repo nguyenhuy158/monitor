@@ -12,5 +12,5 @@
       "@ui/*": ["./client/src/ui/*"]
     }
   },
-  "include": ["client/src", "server/src", "vite.config.ts"]
+  "include": ["client/src", "server/src", "shared", "vite.config.ts"]
 }

@@ -10,6 +10,9 @@ coverage
 .dev.vars*
 .env*
 
+# Dau vet build sinh tu git moi lan build (scripts/build-info.mjs)
+shared/build-info.generated.ts
+
 # IDEs
 .vscode
 .idea

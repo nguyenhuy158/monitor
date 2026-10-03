@@ -1,7 +1,16 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Search, X, MoreVertical, LogOut, PackageOpen, LayoutDashboard, Settings, BellRing, BarChart3, Activity, Server, Clock, ChevronUp, ChevronDown, ListTree } from 'lucide-react'
-import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, useToast, Pagination, Menu, Avatar, Skeleton, EmptyState, cn, Combobox, BottomNav, Switch, type BadgeTone } from '@ui'
+import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, Pagination, Menu, Avatar, Skeleton, EmptyState, cn, Combobox, BottomNav, Switch, type BadgeTone } from '@ui'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { toast } from 'sonner'
+import { format, formatDistanceToNowStrict } from 'date-fns'
+import { vi } from 'date-fns/locale'
+import { createAvatar } from '@dicebear/core'
+import { funEmoji } from '@dicebear/collection'
+
+function userAvatarSrc(email: string) {
+  return createAvatar(funEmoji, { seed: email, size: 64 }).toDataUri()
+}
 
 const ENV_OPTIONS = [
   { value: 'dev', label: 'Dev' },
@@ -58,24 +67,16 @@ function parseOdooDate(value: string) {
 }
 
 function formatDateTime(value: string) {
-  const d = parseOdooDate(value)
-  const time = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
-  const date = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)}`
-  return `${time} ${date}`
+  return format(parseOdooDate(value), 'HH:mm:ss dd/MM/yy')
 }
 
 function getDelayText(nextCall: string) {
-  const diffMs = Date.now() - parseOdooDate(nextCall).getTime()
+  const target = parseOdooDate(nextCall)
+  const diffMs = Date.now() - target.getTime()
   if (diffMs <= 0) return null
-  
-  const diffMins = Math.floor(diffMs / 60000)
-  if (diffMins < 1) return 'vừa xong'
-  if (diffMins < 60) return `trễ ${diffMins}m`
-  
-  const diffHours = Math.floor(diffMins / 60)
-  if (diffHours < 24) return `trễ ${diffHours}h`
-  
-  return `trễ ${Math.floor(diffHours / 24)}d`
+  if (diffMs < 60000) return 'vừa xong'
+
+  return `trễ ${formatDistanceToNowStrict(target, { locale: vi })}`
 }
 
 function CronStatusBadge({ active }: { active: boolean }) {
@@ -159,7 +160,6 @@ updateDocumentTitle()
 setInterval(updateDocumentTitle, 10000)
 
 export default function App() {
-  const toast = useToast()
   const [configs, setConfigs] = useState<OdooConfig[]>([])
   const [loadingConfigs, setLoadingConfigs] = useState(true)
   const [selectedConfigId, setSelectedConfigId] = useState('')
@@ -430,14 +430,13 @@ export default function App() {
   }
 
   const selectedConfig = configs.find(c => String(c.id) === selectedConfigId)
+  const instanceOptions = useMemo(() => configs.map(config => ({
+    value: String(config.id),
+    label: config.name,
+    description: config.env,
+  })), [configs])
   const now = new Date()
   const delayed = crons.filter(c => parseOdooDate(c.nextcall) < now)
-
-  const instanceOptions = useMemo(() => configs.map(c => ({
-    value: String(c.id),
-    label: c.name,
-    description: c.url.replace(/^https?:\/\//, '')
-  })), [configs])
 
   const sortedCrons = useMemo(() => {
     let items = [...crons]
@@ -503,7 +502,7 @@ export default function App() {
 
   if (!user) return <LoginScreen />
 
-  const avatarUrl = `https://www.gravatar.com/avatar/${btoa(user.email)}?d=mp`
+  const avatarUrl = userAvatarSrc(user.email)
 
   const toggleSort = (key: SortKey) => {
     setSortConfig(current => {

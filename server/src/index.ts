@@ -2,6 +2,7 @@ import { SSO_COOKIE, verifySsoToken } from "@huyab/sso";
 import { type Context, Hono, type MiddlewareHandler } from "hono";
 import { getCookie } from "hono/cookie";
 import { getCrons } from "./odoo";
+import { BUILD_INFO } from "../../shared/build-info";
 
 export interface Env {
   SSO_ISSUER: string;
@@ -46,6 +47,8 @@ const sendMail = (env: Env, mail: { to: string; subject: string; text: string })
     body: JSON.stringify(mail),
   }));
 };
+
+app.get("/api/version", (c) => c.json(BUILD_INFO));
 
 app.get("/api/me", async (c) => {
   const email = await getAuthUser(c);
