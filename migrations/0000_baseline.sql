@@ -1,5 +1,5 @@
--- Tables cho project Monitor dùng chung DB D1
--- Prefix: monitor_
+-- Baseline: the monitor_* schema as it runs in production on 2026-10-18.
+-- IF NOT EXISTS makes it a no-op there; on a fresh local D1 it creates the schema.
 
 CREATE TABLE IF NOT EXISTS monitor_configs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -9,12 +9,10 @@ CREATE TABLE IF NOT EXISTS monitor_configs (
     db TEXT NOT NULL,
     username TEXT NOT NULL,
     password TEXT NOT NULL,
-    env TEXT NOT NULL DEFAULT 'prod', -- dev | preprod | prod
     alert_enabled INTEGER DEFAULT 1,
     created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
-    updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
-    sort_order INTEGER DEFAULT 0
-);
+    updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+, env TEXT NOT NULL DEFAULT 'prod', sort_order INTEGER DEFAULT 0);
 
 CREATE TABLE IF NOT EXISTS monitor_user_settings (
     user_email TEXT PRIMARY KEY,
