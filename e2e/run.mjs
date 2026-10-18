@@ -1,4 +1,4 @@
-// Chay ca bo E2E dev mot lenh: build FE -> ap schema D1 local -> bat SSO +
+// Chay ca bo E2E dev mot lenh: build FE -> ap migrations D1 local -> bat SSO +
 // Odoo gia -> bat `wrangler dev` -> chay smoke suite -> tat het.
 //
 // SSO that (auth.huyab.click) va Odoo that khong dung duoc trong test:
@@ -51,8 +51,8 @@ if (process.env.E2E_SKIP_BUILD !== "1") {
 }
 await run(
   "pnpm",
-  ["exec", "wrangler", "d1", "execute", "DB", "--local", "--file", "schema.sql"],
-  { label: "schema D1" },
+  ["exec", "wrangler", "d1", "migrations", "apply", "DB", "--local"],
+  { label: "migrations D1" },
 );
 // Xoa du lieu cua user E2E tu lan chay truoc de so lieu Stats co dinh.
 await run(

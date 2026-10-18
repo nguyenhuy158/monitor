@@ -22,7 +22,7 @@ server/src/                    # Backend (Cloudflare Worker entry, see wrangler.
   index.ts                     #   Hono API (/api/*), SSO check, scheduled() cron check
   odoo.ts                      #   Odoo JSON-RPC (/jsonrpc) client for ir.cron
 public/                        # Static files copied into dist/
-schema.sql                     # D1 schema (monitor_configs)
+migrations/                    # D1 migrations (monitor_*), history in monitor_migrations
 index.html                     # HTML shell (loads client/src/main.tsx)
 vite.config.ts                 # Vite config, aliases `@` and `@ui`, LightningCSS
 wrangler.jsonc                 # Worker config: D1, MAILER service, cron, route
@@ -38,7 +38,7 @@ only for history.
 - `pnpm dev:client`: run only the Vite dev server for the frontend.
 - `pnpm build`: create the Vite production build in `dist/`.
 - `pnpm check`: TypeScript typecheck (`tsc --noEmit`); blocking in CI.
-- `pnpm e2e`: build, apply `schema.sql` to local D1, start a fake SSO + Odoo
+- `pnpm e2e`: build, apply `migrations/` to local D1, start a fake SSO + Odoo
   server and `wrangler dev`, then run the Chromium smoke suite
   (`e2e/ui-smoke.mjs`, playwright-core). Set `PLAYWRIGHT_CHROMIUM_PATH` if no
   Chromium/Chrome is found.
