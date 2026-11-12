@@ -1,4 +1,4 @@
-# Odoo Monitor (moni.huyab.click)
+# Odoo Monitor (moni.huyab.cfd)
 
 Ứng dụng giám sát các bản ghi `ir.cron` của Odoo.
 

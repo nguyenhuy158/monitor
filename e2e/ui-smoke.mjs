@@ -8,7 +8,7 @@
 //    Dashboard, tim kiem, chi tiet cron, sua instance, Settings.
 //
 // `pnpm e2e` = build + wrangler dev local + ca 2 phan.
-// `pnpm e2e:prod` = chi phan 1 tren https://alert.huyab.click.
+// `pnpm e2e:prod` = chi phan 1 tren https://alert.huyab.cfd.
 //
 // Bien moi truong:
 // - E2E_BASE_URL: mac dinh http://127.0.0.1:8787 (BASE cua @huyab/e2e)
