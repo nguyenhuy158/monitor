@@ -121,7 +121,7 @@ function LoginScreen() {
               />
             </svg>
           }
-          onClick={() => window.location.href = `https://auth.huyab.click/login?redirect_uri=${window.location.href}`}
+          onClick={() => window.location.href = `https://auth.huyab.cfd/login?redirect_uri=${window.location.href}`}
         >
           Tiếp tục với Google
         </Button>
@@ -600,7 +600,7 @@ export default function App() {
                     label: 'Đăng xuất',
                     icon: <LogOut className="size-4" />,
                     destructive: true,
-                    onSelect: () => window.location.href = 'https://auth.huyab.click/logout'
+                    onSelect: () => window.location.href = 'https://auth.huyab.cfd/logout'
                   }
                 ]}
               />

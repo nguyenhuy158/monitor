@@ -1,7 +1,7 @@
 // Chay ca bo E2E dev mot lenh: build FE -> ap migrations D1 local -> bat SSO +
 // Odoo gia -> bat `wrangler dev` -> chay smoke suite -> tat het.
 //
-// SSO that (auth.huyab.click) va Odoo that khong dung duoc trong test:
+// SSO that (auth.huyab.cfd) va Odoo that khong dung duoc trong test:
 // - SSO gia: `startSsoMock` cua @huyab/e2e (JWKS + token ky bang khoa sinh luc
 //   chay); worker duoc bat voi SSO_ISSUER tro ve day nen cookie `huyab_sso`
 //   hop le.

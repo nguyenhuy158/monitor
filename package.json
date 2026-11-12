@@ -15,13 +15,13 @@
     "lint": "biome check .",
     "format": "biome format --write .",
     "e2e": "node e2e/run.mjs",
-    "e2e:prod": "E2E_BASE_URL=https://alert.huyab.click node e2e/ui-smoke.mjs",
+    "e2e:prod": "E2E_BASE_URL=https://alert.huyab.cfd node e2e/ui-smoke.mjs",
     "deploy": "wrangler deploy"
   },
   "dependencies": {
     "@dicebear/collection": "^9.4.2",
     "@dicebear/core": "^9.4.3",
-    "@huyab/sso": "github:nguyenhuy158/kit#v0.1.0&path:packages/sso",
+    "@huyab/sso": "github:nguyenhuy158/kit#v0.2.0&path:packages/sso",
     "date-fns": "^4.4.0",
     "hono": "^4.6.14",
     "lucide-react": "^0.468.0",
@@ -33,8 +33,8 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
     "@cloudflare/workers-types": "^4.20241230.0",
-    "@huyab/config": "github:nguyenhuy158/kit#v0.1.0&path:packages/config",
-    "@huyab/e2e": "github:nguyenhuy158/kit#v0.1.0&path:packages/e2e",
+    "@huyab/config": "github:nguyenhuy158/kit#v0.2.0&path:packages/config",
+    "@huyab/e2e": "github:nguyenhuy158/kit#v0.2.0&path:packages/e2e",
     "@tailwindcss/vite": "^4.0.0",
     "@types/node": "^22.20.5",
     "@types/react": "^19.0.0",

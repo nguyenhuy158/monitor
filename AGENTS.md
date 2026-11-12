@@ -42,7 +42,7 @@ only for history.
   server and `wrangler dev`, then run the Chromium smoke suite
   (`e2e/ui-smoke.mjs`, playwright-core). Set `PLAYWRIGHT_CHROMIUM_PATH` if no
   Chromium/Chrome is found.
-- `pnpm e2e:prod`: read-only smoke against https://alert.huyab.click (GET `/`,
+- `pnpm e2e:prod`: read-only smoke against https://alert.huyab.cfd (GET `/`,
   `/api/me`, `/api/configs`, `/favicon.svg`; no login, no writes).
 - `pnpm lint`: run Biome lint + format checks (report only).
 - `pnpm format`: apply Biome formatting.
@@ -92,14 +92,14 @@ summary, check/build results, and screenshots for visible UI changes.
 
 ## Ecosystem
 
-See the [huyab.click ecosystem map](https://github.com/nguyenhuy158/kit/blob/main/docs/ECOSYSTEM.md) for how all personal repos connect.
+See the [huyab.cfd ecosystem map](https://github.com/nguyenhuy158/kit/blob/main/docs/ECOSYSTEM.md) for how all personal repos connect.
 
 - Kit packages: `@huyab/sso` (`verifySsoToken` on the `huyab_sso` cookie
   only, no Bearer), `@huyab/e2e` (`startServer`, `run`, `startSsoMock`,
   `findChromium`, `assert`, `assertLocalOnly` in `e2e/`), `@huyab/config`
   (Biome + tsconfig base), reusable CI
   `nguyenhuy158/kit/.github/workflows/check.yml@v0.1.0`.
-- Talks to: sso (JWKS at `auth.huyab.click`), mailer through the `MAILER`
+- Talks to: sso (JWKS at `auth.huyab.cfd`), mailer through the `MAILER`
   Service Binding (`POST /send`, `MAILER_KEY`), user-configured Odoo
   instances over JSON-RPC, shared D1 `db` (`monitor_` prefix). Called by
   monitor-ios.
