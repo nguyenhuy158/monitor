@@ -31,6 +31,20 @@ wrangler.jsonc                 # Worker config: D1, MAILER service, cron, route
 `README.old.md` describes an older `src/worker` + `src/web` layout and is kept
 only for history.
 
+## Ecosystem
+
+See the [huyab.cfd ecosystem map](https://github.com/nguyenhuy158/kit/blob/main/docs/ECOSYSTEM.md) for how all personal repos connect.
+
+- Kit packages: `@huyab/sso` (`verifySsoToken` on the `huyab_sso` cookie
+  only, no Bearer), `@huyab/e2e` (`startServer`, `run`, `startSsoMock`,
+  `findChromium`, `assert`, `assertLocalOnly` in `e2e/`), `@huyab/config`
+  (Biome + tsconfig base), reusable CI
+  `nguyenhuy158/kit/.github/workflows/check.yml@v0.1.0`.
+- Talks to: sso (JWKS at `auth.huyab.cfd`), mailer through the `MAILER`
+  Service Binding (`POST /send`, `MAILER_KEY`), user-configured Odoo
+  instances over JSON-RPC, shared D1 `db` (`monitor_` prefix). Called by
+  monitor-ios.
+
 ## Build, Test, and Development Commands
 
 - `pnpm install`: install project dependencies.
@@ -94,20 +108,6 @@ stay read-only. If unit tests are added, use Vitest colocated beside the module.
 Use concise Conventional Commits, for example `feat: add cron delay filter` or
 `fix: guard missing user in settings tab`. Pull requests should include a short
 summary, check/build results, and screenshots for visible UI changes.
-
-## Ecosystem
-
-See the [huyab.cfd ecosystem map](https://github.com/nguyenhuy158/kit/blob/main/docs/ECOSYSTEM.md) for how all personal repos connect.
-
-- Kit packages: `@huyab/sso` (`verifySsoToken` on the `huyab_sso` cookie
-  only, no Bearer), `@huyab/e2e` (`startServer`, `run`, `startSsoMock`,
-  `findChromium`, `assert`, `assertLocalOnly` in `e2e/`), `@huyab/config`
-  (Biome + tsconfig base), reusable CI
-  `nguyenhuy158/kit/.github/workflows/check.yml@v0.1.0`.
-- Talks to: sso (JWKS at `auth.huyab.cfd`), mailer through the `MAILER`
-  Service Binding (`POST /send`, `MAILER_KEY`), user-configured Odoo
-  instances over JSON-RPC, shared D1 `db` (`monitor_` prefix). Called by
-  monitor-ios.
 
 ## Agent-Specific Instructions
 
