@@ -64,6 +64,11 @@ Keep `client/src/ui/` and `client/src/styles/tokens.css` in sync with the
 Dark mode is the `.dark` class on `<html>`. Avoid magic strings and numbers;
 extract them into named constants.
 
+UI primitives come only from [ui-kit](https://github.com/nguyenhuy158/ui-kit)
+(gallery: https://uikit.huyab.cfd). Copy them here and keep them in sync; do
+not hand-roll or fork a primitive in this repo. If ui-kit lacks one, add it to
+ui-kit first (with a Gallery demo), then copy it here.
+
 UI conventions:
 
 - Mobile-first, tuned for iPhone/Android; prefer Lucide icons over text on
