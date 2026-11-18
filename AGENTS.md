@@ -35,8 +35,8 @@ only for history.
 
 See the [huyab.cfd ecosystem map](https://github.com/nguyenhuy158/kit/blob/main/docs/ECOSYSTEM.md) for how all personal repos connect.
 
-- Kit packages: `@huyab/sso` (`verifySsoToken` on the `huyab_sso` cookie
-  only, no Bearer), `@huyab/e2e` (`startServer`, `run`, `startSsoMock`,
+- Kit packages: `@huyab/sso` (`getClaimsFromRequest`: the `huyab_sso` cookie,
+  else `Authorization: Bearer`), `@huyab/e2e` (`startServer`, `run`, `startSsoMock`,
   `findChromium`, `assert`, `assertLocalOnly` in `e2e/`), `@huyab/config`
   (Biome + tsconfig base), reusable CI
   `nguyenhuy158/kit/.github/workflows/check.yml@v0.1.0`.

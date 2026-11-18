@@ -1,6 +1,5 @@
-import { SSO_COOKIE, verifySsoToken } from "@huyab/sso";
+import { getClaimsFromRequest } from "@huyab/sso";
 import { type Context, Hono, type MiddlewareHandler } from "hono";
-import { getCookie } from "hono/cookie";
 import { getCrons } from "./odoo";
 import { BUILD_INFO } from "../../shared/build-info";
 
@@ -16,12 +15,9 @@ type AppEnv = { Bindings: Env; Variables: { email: string } };
 
 const app = new Hono<AppEnv>();
 
-// Chi doc cookie `huyab_sso` (khong nhan Bearer), nen khong dung requireUser
-// cua @huyab/sso/hono.
+// Cookie `huyab_sso`, neu khong co thi `Authorization: Bearer` (CLI dung SSO auth key).
 const getAuthUser = async (c: Context<AppEnv>) => {
-  const token = getCookie(c, SSO_COOKIE);
-  if (!token) return null;
-  const claims = await verifySsoToken(token, c.env.SSO_ISSUER);
+  const claims = await getClaimsFromRequest(c.req.raw, c.env.SSO_ISSUER);
   return claims?.email ?? null;
 };
 

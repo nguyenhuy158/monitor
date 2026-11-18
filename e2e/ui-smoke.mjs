@@ -62,6 +62,16 @@ try {
   // ---- Phan 2: chi local, co ghi D1 local ----
   if (SSO_TOKEN) {
     const instanceName = `E2E Odoo ${Date.now()}`;
+    const viaBearer = await fetch(BASE + "/api/me", {
+      headers: { authorization: `Bearer ${SSO_TOKEN}` },
+    });
+    assert(viaBearer.status === 200, `Bearer /api/me tra ${viaBearer.status}`);
+    const badBearer = await fetch(BASE + "/api/me", {
+      headers: { authorization: "Bearer bad.token.here" },
+    });
+    assert(badBearer.status === 401, `Bearer sai tra ${badBearer.status}`);
+    ok("Authorization: Bearer with a valid SSO JWT works, a bad one gets 401");
+
     await context.addCookies([{ name: "huyab_sso", value: SSO_TOKEN, url: BASE }]);
     await page.goto(BASE + "/");
     await page.getByText("Thống kê Cron trễ theo môi trường").waitFor(WAIT);
