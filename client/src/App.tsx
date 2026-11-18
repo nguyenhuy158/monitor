@@ -89,7 +89,7 @@ function LoginScreen() {
     <div className="min-h-screen flex items-center justify-center bg-bg p-6">
       <Card className="max-w-md w-full text-center space-y-8 py-16 shadow-2xl border-primary/5">
         <div className="flex flex-col items-center space-y-4">
-          <div className="scale-150 mb-2">
+          <div className="scale-150 mb-4">
             <Logo />
           </div>
           <div className="space-y-2">
@@ -136,18 +136,7 @@ function LoginScreen() {
 }
 
 function Logo() {
-  return (
-    <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-fg shadow-sm shadow-primary/20">
-      <svg viewBox="0 0 64 64" className="size-6 fill-current">
-        <rect x="16" y="49" width="32" height="8" rx="4" />
-        <rect x="27" y="43" width="10" height="7" />
-        <rect x="7" y="6" width="50" height="38" rx="9" fill="none" stroke="currentColor" strokeWidth="3" />
-        <path d="M28 30 Q32 34 36 30" stroke="currentColor" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-        <circle cx="24" cy="24" r="3.5" />
-        <circle cx="40" cy="24" r="3.5" />
-      </svg>
-    </div>
-  )
+  return <img src="/icon-192.png" alt="" className="size-9 rounded-xl shadow-sm" />
 }
 
 // Cập nhật title là giờ hiện tại
