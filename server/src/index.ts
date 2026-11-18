@@ -116,6 +116,19 @@ app.put("/api/configs/:id", requireUser, async (c) => {
   return c.json({ success: true });
 });
 
+app.put("/api/configs/:id/alert", requireUser, async (c) => {
+  const email = c.get("email");
+  const { enabled } = await c.req.json();
+  if (typeof enabled !== "boolean") return c.json({ error: "Invalid enabled" }, 400);
+
+  const result = await c.env.DB.prepare(
+    "UPDATE monitor_configs SET alert_enabled = ? WHERE id = ? AND user_email = ?"
+  ).bind(enabled ? 1 : 0, c.req.param("id"), email).run();
+
+  if (!result.meta.changes) return c.json({ error: "Not found" }, 404);
+  return c.json({ success: true });
+});
+
 app.post("/api/configs/reorder", requireUser, async (c) => {
   const email = c.get("email");
   const { ids } = await c.req.json();

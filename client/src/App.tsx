@@ -28,9 +28,10 @@ type OdooConfig = {
   username: string
   password: string
   env: string
+  alert_enabled: number | null
 }
 
-type ConfigDraft = Omit<OdooConfig, 'id'>
+type ConfigDraft = Omit<OdooConfig, 'id' | 'alert_enabled'>
 
 type Cron = {
   id: number
@@ -389,6 +390,21 @@ export default function App() {
         toast.error('Lỗi khi nhân bản')
       }
     }).catch(() => toast.error('Lỗi kết nối'))
+  }
+
+  const handleToggleAlert = (configId: number, enabled: boolean) => {
+    const previous = configs
+    setConfigs(configs.map(c => c.id === configId ? { ...c, alert_enabled: enabled ? 1 : 0 } : c))
+    fetch(`/api/configs/${configId}/alert`, {
+      method: 'PUT',
+      body: JSON.stringify({ enabled })
+    }).then(res => {
+      if (!res.ok) throw new Error()
+      toast.success(enabled ? 'Đã bật giám sát' : 'Đã tắt giám sát')
+    }).catch(() => {
+      setConfigs(previous)
+      toast.error('Lỗi khi đổi trạng thái')
+    })
   }
 
   const handleMoveConfig = (index: number, direction: 'up' | 'down') => {
@@ -959,6 +975,12 @@ export default function App() {
                     </div>
 
                     <div className="flex items-center gap-1">
+                      <Switch
+                        className="w-auto py-0"
+                        label={<span className="sr-only">Bật cảnh báo {config.name}</span>}
+                        checked={config.alert_enabled !== 0}
+                        onChange={(enabled) => handleToggleAlert(config.id, enabled)}
+                      />
                       <Button 
                         variant="ghost" 
                         size="icon" 
