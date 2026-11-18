@@ -122,6 +122,15 @@ try {
     await editDialog.getByRole("button", { name: "Hủy" }).click();
     ok("edit modal loads the clicked instance");
 
+    const alertSwitch = page.getByRole("switch", { name: `Bật cảnh báo ${instanceName}` });
+    await alertSwitch.click();
+    await page.getByText("Đã tắt giám sát").waitFor(WAIT);
+    const afterOff = await page.evaluate(() => fetch("/api/configs").then((response) => response.json()));
+    assert(afterOff.some((config) => config.alert_enabled === 0), "tat giam sat phai luu alert_enabled = 0");
+    await alertSwitch.click();
+    await page.getByText("Đã bật giám sát").waitFor(WAIT);
+    ok("alert switch toggles monitoring per instance");
+
     await page.locator("nav").getByRole("button", { name: "Settings" }).click();
     await page.getByText("Hệ thống sẽ gửi mail khi có ít nhất 1 cron trễ từ").waitFor(WAIT);
     await page.locator('main input[type="number"]').fill("45");
