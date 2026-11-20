@@ -7,10 +7,10 @@
     "allowImportingTsExtensions": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./client/src/*"],
-      "@ui": ["./client/src/ui"],
-      "@ui/*": ["./client/src/ui/*"]
+      "@/*": ["./frontend/src/*"],
+      "@ui": ["./frontend/src/ui"],
+      "@ui/*": ["./frontend/src/ui/*"]
     }
   },
-  "include": ["client/src", "server/src", "shared", "vite.config.ts"]
+  "include": ["frontend/src", "backend/src", "shared", "vite.config.ts"]
 }
