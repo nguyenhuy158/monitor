@@ -12,18 +12,18 @@ goes through the `mailer` service binding.
 Folder structure:
 
 ```text
-client/src/                    # Frontend (Vite root is the repo root, see index.html)
+frontend/src/                    # Frontend (Vite root is the repo root, see index.html)
   main.tsx                     #   Entry: ToastProvider + App
   App.tsx                      #   Dashboard, configs and Settings tabs (main UI logic)
   index.css                    #   Imports styles/tokens.css
   styles/tokens.css            #   Design tokens, copied verbatim from ui-kit
   ui/                          #   In-house UI kit (`@ui` alias), copied from ui-kit
-server/src/                    # Backend (Cloudflare Worker entry, see wrangler.jsonc)
+backend/src/                    # Backend (Cloudflare Worker entry, see wrangler.jsonc)
   index.ts                     #   Hono API (/api/*), SSO check, scheduled() cron check
   odoo.ts                      #   Odoo JSON-RPC (/jsonrpc) client for ir.cron
 public/                        # Static files copied into dist/
 migrations/                    # D1 migrations (monitor_*), history in monitor_migrations
-index.html                     # HTML shell (loads client/src/main.tsx)
+index.html                     # HTML shell (loads frontend/src/main.tsx)
 vite.config.ts                 # Vite config, aliases `@` and `@ui`, LightningCSS
 wrangler.jsonc                 # Worker config: D1, MAILER service, cron, route
 ```
@@ -72,7 +72,7 @@ Use `pnpm` for all package commands.
 Use TypeScript and React 19. Use two-space indentation and follow the existing
 quote style of the file you edit. React components use PascalCase names.
 Import UI components from the `@ui` alias and compose class names with `cn`.
-Keep `client/src/ui/` and `client/src/styles/tokens.css` in sync with the
+Keep `frontend/src/ui/` and `frontend/src/styles/tokens.css` in sync with the
 `ui-kit` repo instead of forking them; style with token utilities
 (`bg-surface`, `text-fg-muted`, `border-border`, ...) rather than raw colors.
 Dark mode is the `.dark` class on `<html>`. Avoid magic strings and numbers;
