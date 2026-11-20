@@ -1,12 +1,13 @@
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { lazy, Suspense, useEffect, useState, useMemo, useCallback } from 'react'
 import { Plus, Copy, Mail, Edit2, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Search, X, MoreVertical, LogOut, PackageOpen, LayoutDashboard, Settings, BellRing, BarChart3, Activity, Server, Clock, ChevronUp, ChevronDown, ListTree } from 'lucide-react'
 import { Card, CardHeader, Table, Metric, Badge, HeaderBar, Button, Modal, Input, Field, Select, RadioGroup, Pagination, Menu, Avatar, Skeleton, EmptyState, cn, Combobox, BottomNav, Switch, type BadgeTone } from '@ui'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { toast } from 'sonner'
 import { format, formatDistanceToNowStrict } from 'date-fns'
 import { vi } from 'date-fns/locale'
 import { createAvatar } from '@dicebear/core'
 import { funEmoji } from '@dicebear/collection'
+
+const EnvChart = lazy(() => import('./EnvChart'))
 
 function userAvatarSrc(email: string) {
   return createAvatar(funEmoji, { seed: email, size: 64 }).toDataUri()
@@ -873,36 +874,9 @@ export default function App() {
                     <Skeleton className="h-full w-full rounded-ui" />
                   </div>
                 ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={statsData.envs} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--ui-border)" opacity={0.5} />
-                      <XAxis 
-                        dataKey="name" 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: 'var(--ui-fg-muted)', fontSize: 12 }}
-                      />
-                      <YAxis 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: 'var(--ui-fg-muted)', fontSize: 12 }}
-                      />
-                      <Tooltip 
-                        cursor={{ fill: 'var(--ui-surface-muted)', opacity: 0.4 }}
-                        contentStyle={{ 
-                          backgroundColor: 'var(--ui-surface)', 
-                          borderRadius: 'var(--ui-radius)', 
-                          border: '1px solid var(--ui-border)',
-                          boxShadow: 'var(--ui-shadow-lg)'
-                        }}
-                      />
-                      <Bar dataKey="delayed" radius={[4, 4, 0, 0]} barSize={40}>
-                        {statsData.envs.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
+                  <Suspense fallback={<Skeleton className="h-full w-full rounded-ui" />}>
+                    <EnvChart data={statsData.envs} />
+                  </Suspense>
                 )}
               </div>
             </Card>
