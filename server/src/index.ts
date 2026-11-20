@@ -218,7 +218,7 @@ export default {
     const { results: allSettings } = await env.DB.prepare("SELECT * FROM monitor_user_settings").all();
     const settingsMap = new Map((allSettings as any[]).map(s => [s.user_email, s.alert_delay_minutes]));
 
-    for (const config of (configs as any[])) {
+    await Promise.all((configs as any[]).map(async (config) => {
       try {
         const crons = await getCrons(config.url, config.db, config.username, config.password);
         const now = new Date();
@@ -245,6 +245,6 @@ export default {
       } catch (e) {
         console.error(`Failed to check crons for ${config.name}:`, e);
       }
-    }
+    }));
   },
 };
